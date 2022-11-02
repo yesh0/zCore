@@ -9,6 +9,8 @@
 #![deny(warnings)]
 // #![deny(missing_docs)] 形同虚设了
 
+#![feature(map_first_last)] // OK rust lol
+
 extern crate alloc;
 
 #[macro_use]
@@ -29,5 +31,6 @@ pub mod signal;
 pub mod task;
 pub mod util;
 pub mod vm;
+pub mod probe;
 
 pub use self::error::*;

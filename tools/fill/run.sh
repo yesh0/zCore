@@ -1,0 +1,1 @@
+python3 fill.py /home/s2020012692/ebpf/zCore/target/riscv64/debug/zcore riscv64-unknown-elf-

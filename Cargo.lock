@@ -1655,6 +1655,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "riscv-decode"
+version = "0.2.0"
+source = "git+https://github.com/latte-c/riscv-decode?rev=bc8da4e#bc8da4e1763a0179ecdab3301892c306b605d377"
+
+[[package]]
 name = "riscv-target"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2556,6 +2561,8 @@ dependencies = [
  "log",
  "numeric-enum-macro",
  "region-alloc",
+ "riscv-decode",
+ "trapframe",
  "xmas-elf 0.7.0",
 ]
 
