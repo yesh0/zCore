@@ -2,9 +2,11 @@ use lock::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::collections::btree_set::BTreeSet;
 use lazy_static::*;
+use alloc::sync::Arc;
+use crate::vm::{VmObject};
 
 use crate::vm::{PAGE_SIZE};
-use super::{byte_copy, alloc_page, free_page};
+use super::{byte_copy, alloc_page};
 
 const BREAKPOINT_LENGTH: usize = 2;
 const BREAKPOINTS_PER_PAGE: usize = PAGE_SIZE / BREAKPOINT_LENGTH;
@@ -27,6 +29,7 @@ pub fn inject_breakpoints(addr: usize, length: Option<usize>) {
 }
 
 struct BreakpointPage {
+    _vmo: Arc<VmObject>,
     pub nr_free: usize,
 }
 
@@ -46,13 +49,14 @@ pub fn alloc_breakpoint() -> usize {
         page.nr_free -= 1;
         return addr;
     } else {
-        let base = alloc_page();
+        let (vmo, base) = alloc_page();
         inject_breakpoints(base, Some(PAGE_SIZE));
         for i in 1..BREAKPOINTS_PER_PAGE {
             free_bps.insert(base + i * BREAKPOINT_LENGTH);
         }
 
         let page = BreakpointPage {
+            _vmo: vmo,
             nr_free: BREAKPOINTS_PER_PAGE - 1,
         };
         BREAKPOINT_PAGES.lock().insert(base, page);
@@ -74,6 +78,5 @@ pub fn free_breakpoint(addr: usize) {
             free_bps.remove(&(base + i * BREAKPOINT_LENGTH));
         }
         pages.remove(&base);
-        free_page(base);
     }
 }

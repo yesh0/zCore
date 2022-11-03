@@ -43,7 +43,7 @@ fn init_kernel_page_table() -> PagingResult<PageTable> {
     map_range(
         stext as usize,
         etext as usize,
-        MMUFlags::READ | MMUFlags::EXECUTE,
+        MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE,
     )?;
     map_range(srodata as usize, erodata as usize, MMUFlags::READ)?;
     map_range(
@@ -54,7 +54,7 @@ fn init_kernel_page_table() -> PagingResult<PageTable> {
     map_range(
         sbss as usize,
         ebss as usize,
-        MMUFlags::READ | MMUFlags::WRITE,
+        MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE,
     )?;
     // stack
     map_range(
@@ -94,7 +94,8 @@ fn init_kernel_page_table() -> PagingResult<PageTable> {
         map_range(
             phys_to_virt(r.start),
             phys_to_virt(r.end),
-            MMUFlags::READ | MMUFlags::WRITE,
+            // TODO: remove EXECUTE and modify after allocation
+            MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE,
         )?;
     }
 

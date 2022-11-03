@@ -93,6 +93,7 @@ pub fn kprobe_trap_handler(tf: &mut TrapFrame) -> bool {
         // warn!("redirect target {:#x}", probe.insn_buf.addr());
         set_trapframe_pc(tf, probe.insn_buf.addr());
         // return true -> redirect to buffer -> ebreak in buffer -> post_handler -> in ADDR_MAP instead of KPROBES
+        info!("set pc to {:#x}", probe.insn_buf.addr());
         return true;
     }
 
@@ -168,7 +169,7 @@ pub fn unregister_kprobe(addr: usize) -> bool {
 
 #[no_mangle]
 pub extern "C" fn kprobes_test_ok(i: usize) {
-    warn!("[Kprobes test] {} OK", i);
+    info!("[Kprobes test] {} OK", i);
 }
 
 extern "C" {
@@ -178,21 +179,30 @@ extern "C" {
 }
 
 fn test_pre_handler(_tf: &mut TrapFrame, _data: usize) -> isize {
-    warn!("pre handler for test invoked.");
+    info!("pre handler for test invoked.");
+    0
+}
+
+fn test_post_handler(_tf: &mut TrapFrame, _data: usize) -> isize {
+    info!("post handler for test invoked.");
     0
 }
 
 pub fn run_kprobes_tests() {
-    debug!("running kprobes tests");
+    info!("running kprobes tests");
     unsafe {
         let nr_tests = *(kprobes_test_fn_count as *const i32) as usize;
         let test_fns = from_raw_parts(kprobes_test_fns as *const fn(usize), nr_tests);
         let probes = from_raw_parts(kprobes_test_probe_points as *const usize, nr_tests);
 
         for (i, &f) in test_fns.iter().enumerate() {
-            register_kprobe(probes[i], KProbeArgs::from(test_pre_handler));
+            register_kprobe(probes[i], KProbeArgs {
+                pre_handler: Arc::new(test_pre_handler),
+                post_handler: Some(Arc::new(test_post_handler)),
+                user_data: 0,
+            });
             f(0);
         }
     }
-    debug!("kprobes tests finished");
+    info!("kprobes tests finished");
 }

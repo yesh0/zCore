@@ -73,7 +73,8 @@ pub fn unregister_kretprobe(addr: usize) -> Option<()> {
     }
 }
 
-pub fn breakpoint_handler(tf: &mut TrapFrame) {
+#[no_mangle]
+pub fn kprobes_breakpoint_handler(tf: &mut TrapFrame) {
     let handled = kprobes::kprobe_trap_handler(tf);
     if !handled {
         kretprobes::kretprobe_trap_handler(tf);
@@ -83,8 +84,8 @@ pub fn breakpoint_handler(tf: &mut TrapFrame) {
 pub fn run_tests() {
     info!("running kprobe tests");
     kprobes::run_kprobes_tests();
+    // kretprobes::run_kretprobes_test();
     /*
-    kprobes::kretprobes::run_kretprobes_test();
     if arch::cpu::id() == 0 {
         kprobes::trace::run_dynamic_trace_test();
     }

@@ -2,47 +2,49 @@ use core::arch::{asm, global_asm};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 use riscv_decode::{CompressedInstruction::*, Instruction::*, *};
 use trapframe::TrapFrame;
+use alloc::sync::Arc;
 
 use super::kprobes::SingleStepType::{self, *};
-use crate::vm::{VmObject, MMUFlags, CachePolicy, PAGE_SIZE};
+use crate::vm::{VmObject, MMUFlags};
 
 mod breakpoint;
 pub use breakpoint::*;
+use kernel_hal::mem::{virt_to_phys, phys_to_virt, pmem_copy};
 
-fn alloc_page() -> usize {
+// TODO: actually modify page table
+fn alloc_page() -> (Arc<VmObject>, usize) {
     let flags = MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE;
-
-    // TODO: report error
-    // commit happens here and vmo is passed into KERNEL_ASPACE
-    info!("alloc_page: va = {:#x}", va);
-    va
-}
-
-fn free_page(va: usize) {
-    KERNEL_ASPACE.unmap(va, PAGE_SIZE).unwrap();
+    let vmo = VmObject::new_paged(1);
+    let pa = vmo.commit_page(0, flags).unwrap();
+    let va = phys_to_virt(pa);
+    trace!("alloc_page: va = {:#x}", va);
+    (vmo, va)
 }
 
 // use frame allocator so that it's easier to handle access permissions (execute)
 // and there's no need to worry about alignment
-fn alloc_insn_buffer() -> usize {
+fn alloc_insn_buffer() -> (Arc<VmObject>, usize) {
     // can save memory by not using a whole page
     alloc_page()
 }
 
 pub fn byte_copy(dst_addr: usize, src_addr: usize, len: usize) {
-    let src = unsafe { from_raw_parts(src_addr as *const u8, len) };
-    let dst = unsafe { from_raw_parts_mut(dst_addr as *mut u8, len) };
-    dst.copy_from_slice(src);
+    trace!("byte_copy: src = {:#x}, dst = {:#x}, len = {:#x}", src_addr, dst_addr, len);
+    pmem_copy(virt_to_phys(dst_addr),
+                virt_to_phys(src_addr),
+                len);
 }
 
 pub struct InstructionBuffer {
+    _vmo: Arc<VmObject>,
     addr: usize,
 }
 
 impl InstructionBuffer {
     pub fn new() -> Self {
-        let addr = alloc_insn_buffer();
+        let (_vmo, addr) = alloc_insn_buffer();
         Self {
+            _vmo,
             addr,
         }
     }
@@ -52,7 +54,6 @@ impl InstructionBuffer {
     }
 
     pub fn copy_in(&self, offset: usize, src_addr: usize, len: usize) {
-        info!("copying {} bytes from {:x} to {:x}", len, src_addr, self.addr + offset);
         byte_copy(self.addr + offset, src_addr, len);
     }
 
@@ -67,7 +68,7 @@ impl InstructionBuffer {
 
 impl Drop for InstructionBuffer {
     fn drop(&mut self) {
-        free_page(self.addr);
+        // vmo gets dropped, is it ok to do nothing?
     }
 }
 
