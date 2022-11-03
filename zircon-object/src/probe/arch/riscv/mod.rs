@@ -4,17 +4,17 @@ use riscv_decode::{CompressedInstruction::*, Instruction::*, *};
 use trapframe::TrapFrame;
 
 use super::kprobes::SingleStepType::{self, *};
-use crate::vm::{VmObject, MMUFlags, KERNEL_ASPACE, PAGE_SIZE};
+use crate::vm::{VmObject, MMUFlags, CachePolicy, PAGE_SIZE};
 
 mod breakpoint;
 pub use breakpoint::*;
 
 fn alloc_page() -> usize {
-    let vmo = VmObject::new_paged(1);
     let flags = MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE;
+
     // TODO: report error
     // commit happens here and vmo is passed into KERNEL_ASPACE
-    let va = KERNEL_ASPACE.map(None, vmo, 0, PAGE_SIZE, flags).unwrap();
+    info!("alloc_page: va = {:#x}", va);
     va
 }
 
@@ -52,6 +52,7 @@ impl InstructionBuffer {
     }
 
     pub fn copy_in(&self, offset: usize, src_addr: usize, len: usize) {
+        info!("copying {} bytes from {:x} to {:x}", len, src_addr, self.addr + offset);
         byte_copy(self.addr + offset, src_addr, len);
     }
 

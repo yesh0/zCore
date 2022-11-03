@@ -122,6 +122,10 @@ pub fn register_kprobe(addr: usize, args: KProbeArgs) -> bool {
     }
 
     let emulate = insn_type == SingleStepType::Emulate;
+    info!(
+        "register kprobe at {:#x}",
+        addr,
+    );
     let probe = KProbe::new(
         addr,
         args.pre_handler,

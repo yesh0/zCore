@@ -35,6 +35,7 @@ fn primary_main(config: kernel_hal::KernelConfig) {
     kernel_hal::primary_init_early(config, &handler::ZcoreKernelHandler);
     let options = utils::boot_options();
     logging::set_max_level(&options.log_level);
+    logging::set_max_level("debug");
     info!("Boot options: {:#?}", options);
     memory::init_frame_allocator(&kernel_hal::mem::free_pmem_regions());
     kernel_hal::primary_init();
@@ -43,6 +44,7 @@ fn primary_main(config: kernel_hal::KernelConfig) {
         if #[cfg(all(feature = "linux", feature = "zircon"))] {
             panic!("Feature `linux` and `zircon` cannot be enabled at the same time!");
         } else if #[cfg(feature = "linux")] {
+            zircon_object::probe::run_tests();
             let args = options.root_proc.split('?').map(Into::into).collect(); // parse "arg0?arg1?arg2"
             let envs = alloc::vec!["PATH=/usr/sbin:/usr/bin:/sbin:/bin".into()];
             let rootfs = fs::rootfs();

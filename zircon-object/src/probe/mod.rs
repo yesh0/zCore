@@ -79,3 +79,14 @@ pub fn breakpoint_handler(tf: &mut TrapFrame) {
         kretprobes::kretprobe_trap_handler(tf);
     }
 }
+
+pub fn run_tests() {
+    info!("running kprobe tests");
+    kprobes::run_kprobes_tests();
+    /*
+    kprobes::kretprobes::run_kretprobes_test();
+    if arch::cpu::id() == 0 {
+        kprobes::trace::run_dynamic_trace_test();
+    }
+    */
+}
