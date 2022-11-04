@@ -1,6 +1,5 @@
 use crate::memory;
-use crate::sync::SpinLock as Mutex;
-use crate::syscall::{SysError::*, SysResult};
+use lock::Mutex;
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
@@ -10,6 +9,7 @@ use core::{mem, slice};
 use rlibc::memcmp;
 
 use super::consts::*;
+use super::retcode::*;
 use super::*;
 
 #[repr(C)]

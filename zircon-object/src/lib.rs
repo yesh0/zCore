@@ -30,4 +30,6 @@ pub mod task;
 pub mod util;
 pub mod vm;
 
+pub mod ebpf;
+
 pub use self::error::*;

@@ -1,4 +1,3 @@
-use crate::syscall::{SysError::*, SysResult};
 use alloc::string::String;
 use alloc::vec::Vec;
 use xmas_elf;
@@ -52,7 +51,7 @@ impl BpfProgram {
 }
 
 // #[cfg(target_arch = "riscv64")]
-pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> SysResult {
+pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfResult {
     let base = prog.as_ptr();
     let elf = xmas_elf::ElfFile::new(prog).map_err(|_| EINVAL)?;
     match elf.header.pt2.machine().as_machine() {
@@ -153,7 +152,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> SysRe
     Ok(fd as usize)
 }
 
-// #[cfg(not(target_arch = "riscv64"))]
-// pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> SysResult {
-//     Err(EINVAL) // not supported
-// }
+#[cfg(not(target_arch = "riscv64"))]
+pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> SysResult {
+    Err(EINVAL) // not supported
+}

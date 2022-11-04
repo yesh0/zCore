@@ -6,7 +6,7 @@ use trapframe::TrapFrame;
 
 use crate::kprobes::{register_kprobe, register_kretprobe, KProbeArgs, KRetProbeArgs};
 use crate::lkm::manager::ModuleManager;
-use crate::sync::SpinLock as Mutex;
+use lock::Mutex;
 use crate::syscall::{
     SysError::{self, *},
     SysResult,

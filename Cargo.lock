@@ -590,7 +590,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e11a44a3cc47dcc77ffd8b9eae36eccc123f6c31213a4d32c1b7c270350c7617"
 dependencies = [
  "bare-metal",
- "riscv 0.8.0",
+ "riscv 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "vcell",
 ]
 
@@ -621,6 +621,14 @@ name = "dtb-walker"
 version = "0.2.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9404d41caa1aa659f7be44d5a902e318c0672900822fe9ca41d9e38c14b52332"
+
+[[package]]
+name = "ebpf2rv"
+version = "0.1.0"
+source = "git+https://github.com/latte-c/ebpf2rv?rev=50a7de5#50a7de5df0e0ef0de9e0cc9869ef0853f380e54f"
+dependencies = [
+ "rvjit",
+]
 
 [[package]]
 name = "either"
@@ -691,7 +699,7 @@ dependencies = [
  "lazy_static",
  "log",
  "raw-cpuid 10.6.0",
- "riscv 0.8.0",
+ "riscv 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spin 0.9.4",
  "tock-registers",
  "unicycle",
@@ -1716,6 +1724,18 @@ dependencies = [
 
 [[package]]
 name = "riscv"
+version = "0.8.0"
+source = "git+https://github.com/yesh0/riscv?rev=9eebb5c202b04832f01858536aeb8a1e3c5eccf6#9eebb5c202b04832f01858536aeb8a1e3c5eccf6"
+dependencies = [
+ "bare-metal",
+ "bit_field",
+ "bitflags",
+ "embedded-hal",
+ "log",
+]
+
+[[package]]
+name = "riscv"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73fc4bc7113424814738fe79755a5764e392b3d4d1bc757e6aa6f61cede32095"
@@ -1724,6 +1744,11 @@ dependencies = [
  "bit_field",
  "embedded-hal",
 ]
+
+[[package]]
+name = "riscv-decode"
+version = "0.2.0"
+source = "git+https://github.com/latte-c/riscv-decode?rev=bc8da4e#bc8da4e1763a0179ecdab3301892c306b605d377"
 
 [[package]]
 name = "riscv-target"
@@ -1749,6 +1774,11 @@ name = "rustversion"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97477e48b4cf8603ad5f7aaf897467cf42ab4218a38ef76fb14c2d6773a6d6a8"
+
+[[package]]
+name = "rvjit"
+version = "0.1.0"
+source = "git+https://github.com/latte-c/rvjit?rev=58e145d#58e145d75243bc934a6f9a472fce4ee62ba11525"
 
 [[package]]
 name = "same-file"
@@ -2645,6 +2675,7 @@ dependencies = [
  "bitflags",
  "cfg-if 1.0.0",
  "downcast-rs",
+ "ebpf2rv",
  "futures",
  "hashbrown",
  "kernel-hal",
@@ -2653,6 +2684,9 @@ dependencies = [
  "log",
  "numeric-enum-macro",
  "region-alloc",
+ "riscv 0.8.0 (git+https://github.com/yesh0/riscv?rev=9eebb5c202b04832f01858536aeb8a1e3c5eccf6)",
+ "riscv-decode",
+ "trapframe",
  "xmas-elf 0.7.0",
 ]
 

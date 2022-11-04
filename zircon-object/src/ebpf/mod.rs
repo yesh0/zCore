@@ -4,7 +4,7 @@ pub mod map;
 pub mod program;
 pub mod tracepoints;
 
-use crate::sync::SpinLock as Mutex;
+use lock::Mutex;
 use alloc::collections::BTreeMap;
 use alloc::sync::Arc;
 use core::sync::atomic::{AtomicU32, Ordering};
@@ -33,7 +33,7 @@ impl BpfObject {
     }
 }
 
-const BPF_FD_BASE: u32 = 0x10000000;
+const BPF_FD_BASE: u32 = 0x70000000;
 
 lazy_static! {
     static ref BPF_FD_COUNTER: AtomicU32 = AtomicU32::new(BPF_FD_BASE);

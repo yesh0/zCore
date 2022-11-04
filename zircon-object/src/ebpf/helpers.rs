@@ -33,7 +33,7 @@ pub static HELPER_FN_TABLE: [BpfHelperFn; HELPER_FN_COUNT] = [
 // WARNING: be careful to use bpf_probe_read, bpf_get_current_pid_tgid & bpf_get_current_comm
 // in syscall contexts. obtaining current process information may cause deadlock!
 
-fn convert_result(result: SysResult) -> i64 {
+fn convert_result(result: BpfResult) -> i64 {
     match result {
         Ok(val) => val as i64,
         Err(_) => -1,
@@ -78,53 +78,57 @@ fn bpf_map_delete_elem(map_fd: u64, key: u64, _1: u64, _2: u64, _3: u64) -> i64 
     convert_result(res)
 }
 
-fn probe_read_user(dst: *mut u8, src: *const u8, len: usize) -> SysResult {
-    let thread = current_thread().unwrap();
-    let vm = thread.vm.lock();
-    let src_slice = unsafe { vm.check_read_array(src, len)? };
-    let dst_slice = unsafe { core::slice::from_raw_parts_mut(dst, len) };
-    dst_slice.copy_from_slice(src_slice);
-    Ok(0)
+fn probe_read_user(dst: *mut u8, src: *const u8, len: usize) -> BpfResult {
+    // let thread = current_thread().unwrap();
+    // let vm = thread.vm.lock();
+    // let src_slice = unsafe { vm.check_read_array(src, len)? };
+    // let dst_slice = unsafe { core::slice::from_raw_parts_mut(dst, len) };
+    // dst_slice.copy_from_slice(src_slice);
+    // Ok(0)
+    todo!();
 }
 
 // long bpf_probe_read(void *dst, u32 size, const void *unsafe_ptr)
 fn bpf_probe_read(dst: u64, size: u64, src: u64, _1: u64, _2: u64) -> i64 {
-    let src_addr = src as usize;
-    let dst_addr = dst as usize;
-    let len = size as usize;
+    // let src_addr = src as usize;
+    // let dst_addr = dst as usize;
+    // let len = size as usize;
 
-    use crate::arch::consts::KERNEL_OFFSET;
-    if src_addr >= KERNEL_OFFSET {
-        // this is probably a kernel address
-        // WARNING: this may cause kernel crash!
-        let src_slice = unsafe { core::slice::from_raw_parts(src_addr as *const u8, len) };
-        let dst_slice = unsafe { core::slice::from_raw_parts_mut(dst_addr as *mut u8, len) };
-        dst_slice.copy_from_slice(src_slice);
-        0
-    } else {
-        let res = probe_read_user(dst_addr as *mut u8, src_addr as *const u8, len);
-        convert_result(res)
-    }
+    // use crate::arch::consts::KERNEL_OFFSET;
+    // if src_addr >= KERNEL_OFFSET {
+    //     // this is probably a kernel address
+    //     // WARNING: this may cause kernel crash!
+    //     let src_slice = unsafe { core::slice::from_raw_parts(src_addr as *const u8, len) };
+    //     let dst_slice = unsafe { core::slice::from_raw_parts_mut(dst_addr as *mut u8, len) };
+    //     dst_slice.copy_from_slice(src_slice);
+    //     0
+    // } else {
+    //     let res = probe_read_user(dst_addr as *mut u8, src_addr as *const u8, len);
+    //     convert_result(res)
+    // }
+    !todo()
 }
 
 // u64 bpf_ktime_get_ns(void)
 // return current ktime
 fn bpf_ktime_get_ns(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
-    crate::arch::timer::timer_now().as_nanos() as i64
+    todo!();
+    //crate::arch::timer::timer_now().as_nanos() as i64
 }
 
 // long bpf_trace_printk(const char *fmt, u32 fmt_size, ...)
 fn bpf_trace_printk(fmt: u64, fmt_size: u64, p1: u64, p2: u64, p3: u64) -> i64 {
-    // TODO: check pointer
-    let fmt = unsafe { core::slice::from_raw_parts(fmt as *const u8, fmt_size as u32 as usize) };
-    print!(
-        "{}",
-        dyn_fmt::Arguments::new(
-            unsafe { core::str::from_utf8_unchecked(fmt) },
-            &[p1, p2, p3]
-        )
-    );
-    0 // TODO: return number of bytes written
+    // // TODO: check pointer
+    // let fmt = unsafe { core::slice::from_raw_parts(fmt as *const u8, fmt_size as u32 as usize) };
+    // print!(
+    //     "{}",
+    //     dyn_fmt::Arguments::new(
+    //         unsafe { core::str::from_utf8_unchecked(fmt) },
+    //         &[p1, p2, p3]
+    //     )
+    // );
+    // 0 // TODO: return number of bytes written
+    todo!();
 }
 
 fn bpf_get_prandom_u32(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
@@ -132,31 +136,34 @@ fn bpf_get_prandom_u32(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
 }
 
 fn bpf_get_smp_processor_id(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
-    crate::arch::cpu::id() as i64
+    todo!()
+    //crate::arch::cpu::id() as i64
 }
 
 fn bpf_get_current_pid_tgid(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
-    let thread = current_thread().unwrap();
-    let pid = thread.proc.busy_lock().pid.get() as i64;
-    // NOTE: tgid is the same with pid
-    (pid << 32) | pid
+    todo!()
+    // let thread = current_thread().unwrap();
+    // let pid = thread.proc.busy_lock().pid.get() as i64;
+    // // NOTE: tgid is the same with pid
+    // (pid << 32) | pid
 }
 
 fn bpf_get_current_comm(dst: u64, buf_size: u64, _1: u64, _2: u64, _3: u64) -> i64 {
-    let thread = current_thread().unwrap();
-    let exec_str = thread.proc.busy_lock().exec_path.clone();
-    let exec_path = exec_str.as_bytes();
-    let len = exec_path.len();
-    if (buf_size as usize) < len + 1 {
-        return -1;
-    }
+    // let thread = current_thread().unwrap();
+    // let exec_str = thread.proc.busy_lock().exec_path.clone();
+    // let exec_path = exec_str.as_bytes();
+    // let len = exec_path.len();
+    // if (buf_size as usize) < len + 1 {
+    //     return -1;
+    // }
 
-    // NOTE: String is NOT null-terminated. we cannot copy len + 1 bytes directly.
-    let dst_ptr = dst as *mut u8;
-    unsafe {
-        let dst_slice = core::slice::from_raw_parts_mut(dst_ptr, len);
-        dst_slice.copy_from_slice(exec_path);
-        *dst_ptr.add(len) = 0;
-    }
-    len as i64
+    // // NOTE: String is NOT null-terminated. we cannot copy len + 1 bytes directly.
+    // let dst_ptr = dst as *mut u8;
+    // unsafe {
+    //     let dst_slice = core::slice::from_raw_parts_mut(dst_ptr, len);
+    //     dst_slice.copy_from_slice(exec_path);
+    //     *dst_ptr.add(len) = 0;
+    // }
+    // len as i64
+    todo!();
 }
