@@ -8,9 +8,13 @@ use xmas_elf::symbol_table::Entry;
 #[cfg(target_arch = "riscv64")]
 use ebpf2rv::compile;
 
-use super::consts::*;
-use super::helpers::*;
-use super::*;
+use super::{
+    *,
+    consts::*,
+    helpers::*,
+    retcode::BpfErrorCode::*,
+    retcode::BpfResult,
+};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]

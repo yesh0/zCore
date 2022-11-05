@@ -1,11 +1,13 @@
 
 
 
-pub type BpfResult = Result<usize, BpfErrorCode>;
 
 
+#[allow(dead_code)]
+#[repr(i32)]
+#[derive(Debug, Copy, Clone)]
 pub enum BpfErrorCode {
-    EUNDEF = -1,
+    EUNDEF = 0,
     EPERM = 1,
     ENOENT = 2,
     ESRCH = 3,
@@ -57,3 +59,5 @@ pub enum BpfErrorCode {
     ETIMEDOUT = 110,
     ECONNREFUSED = 111,
 }
+
+pub type BpfResult = Result<usize, BpfErrorCode>;

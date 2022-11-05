@@ -1,17 +1,25 @@
 // see Linux kernel source /include/uapi/linux/bpf.h
 
 // eBPF syscall commands
-pub const BPF_MAP_CREATE: usize = 0;
-pub const BPF_MAP_LOOKUP_ELEM: usize = 1;
-pub const BPF_MAP_UPDATE_ELEM: usize = 2;
-pub const BPF_MAP_DELETE_ELEM: usize = 3;
-pub const BPF_MAP_GET_NEXT_KEY: usize = 4;
-pub const BPF_PROG_LOAD: usize = 5;
-pub const BPF_PROG_ATTACH: usize = 8;
-pub const BPF_PROG_DETACH: usize = 9;
+use numeric_enum_macro::numeric_enum;
 
-// custom commands
-pub const BPF_PROG_LOAD_EX: usize = 1000;
+numeric_enum! {
+    #[repr(i32)]
+
+    #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Hash)]
+    pub enum BpfCommand {
+        BPF_MAP_CREATE = 0,
+        BPF_MAP_LOOKUP_ELEM = 1,
+        BPF_MAP_UPDATE_ELEM = 2,
+        BPF_MAP_DELETE_ELEM = 3,
+        BPF_MAP_GET_NEXT_KEY = 4,
+        BPF_PROG_LOAD = 5,
+        BPF_PROG_ATTACH = 8,
+        BPF_PROG_DETACH = 9,
+        BPF_PROG_LOAD_EX = 1000,
+    }
+}
+
 
 // eBPF map types
 pub const BPF_MAP_TYPE_UNSPEC: u32 = 0;

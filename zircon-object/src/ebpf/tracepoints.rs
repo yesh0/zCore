@@ -4,15 +4,13 @@ use alloc::vec::Vec;
 use lazy_static::lazy_static;
 use trapframe::TrapFrame;
 
-use crate::kprobes::{register_kprobe, register_kretprobe, KProbeArgs, KRetProbeArgs};
-use crate::lkm::manager::ModuleManager;
-use lock::Mutex;
-use crate::syscall::{
-    SysError::{self, *},
-    SysResult,
-};
 
-use super::{BpfObject::*, *};
+use lock::Mutex;
+
+
+
+
+use super::{BpfObject::*, *, retcode::BpfErrorCode::{*, self}, retcode::*};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -100,10 +98,11 @@ fn kretprobe_exit_handler(tf: &mut TrapFrame, probed_addr: usize) -> isize {
 }
 
 fn resolve_symbol(symbol: &str) -> Option<usize> {
-    ModuleManager::with(|mm| mm.resolve_symbol(symbol))
+    //ModuleManager::with(|mm| mm.resolve_symbol(symbol))
+    todo!();
 }
 
-fn parse_tracepoint<'a>(target: &'a str) -> Result<(TracepointType, &'a str), SysError> {
+fn parse_tracepoint<'a>(target: &'a str) -> Result<(TracepointType, &'a str), BpfErrorCode> {
     let pos = target.find(':').ok_or(EINVAL)?;
     let type_str = &target[0..pos];
     let fn_name = &target[(pos + 1)..];
@@ -122,7 +121,7 @@ fn parse_tracepoint<'a>(target: &'a str) -> Result<(TracepointType, &'a str), Sy
     Ok((tp_type, fn_name))
 }
 
-pub fn bpf_program_attach(target: &str, prog_fd: u32) -> SysResult {
+pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
     // check program fd
     let program = {
         let objs = BPF_OBJECTS.lock();
@@ -145,35 +144,36 @@ pub fn bpf_program_attach(target: &str, prog_fd: u32) -> SysResult {
         }
         programs.push(program);
     } else {
-        match tp_type {
-            KProbe => {
-                let args = KProbeArgs {
-                    pre_handler: Arc::new(kprobe_handler),
-                    post_handler: None,
-                    user_data: addr,
-                };
-                let _ = register_kprobe(addr, args).ok_or(EINVAL)?;
-                map.insert(tracepoint, vec![program]);
-            }
-            KRetProbeEntry | KRetProbeExit => {
-                let args = KRetProbeArgs {
-                    exit_handler: Arc::new(kretprobe_exit_handler),
-                    entry_handler: Some(Arc::new(kretprobe_entry_handler)),
-                    limit: None,
-                    user_data: addr,
-                };
-                let _ = register_kretprobe(addr, args).ok_or(EINVAL)?;
+    //     match tp_type {
+    //         KProbe => {
+    //             // let args = KProbeArgs {
+    //             //     pre_handler: Arc::new(kprobe_handler),
+    //             //     post_handler: None,
+    //             //     user_data: addr,
+    //             // };
+    //             todo!();
+    //             // let _ = register_kprobe(addr, args).ok_or(EINVAL)?;
+    //             // map.insert(tracepoint, vec![program]);
+    //         }
+    //         KRetProbeEntry | KRetProbeExit => {
+    //             let args = KRetProbeArgs {
+    //                 exit_handler: Arc::new(kretprobe_exit_handler),
+    //                 entry_handler: Some(Arc::new(kretprobe_entry_handler)),
+    //                 limit: None,
+    //                 user_data: addr,
+    //             };
+    //             let _ = register_kretprobe(addr, args).ok_or(EINVAL)?;
 
-                let dual_tp: Tracepoint;
-                if tp_type == KRetProbeEntry {
-                    dual_tp = Tracepoint::new(KRetProbeExit, addr);
-                } else {
-                    dual_tp = Tracepoint::new(KRetProbeEntry, addr);
-                }
-                map.insert(tracepoint, vec![program]);
-                map.insert(dual_tp, vec![]);
-            }
-        }
+    //             let dual_tp: Tracepoint;
+    //             if tp_type == KRetProbeEntry {
+    //                 dual_tp = Tracepoint::new(KRetProbeExit, addr);
+    //             } else {
+    //                 dual_tp = Tracepoint::new(KRetProbeEntry, addr);
+    //             }
+    //             map.insert(tracepoint, vec![program]);
+    //             map.insert(dual_tp, vec![]);
+    //         }
+    //     }
     }
     Ok(0)
 }

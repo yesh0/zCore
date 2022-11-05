@@ -3,6 +3,9 @@ mod helpers;
 pub mod map;
 pub mod program;
 pub mod tracepoints;
+pub mod retcode;
+
+
 
 use lock::Mutex;
 use alloc::collections::BTreeMap;

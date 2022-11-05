@@ -1,4 +1,3 @@
-use crate::memory;
 use lock::Mutex;
 use alloc::boxed::Box;
 use alloc::sync::Arc;
@@ -6,10 +5,9 @@ use alloc::vec::Vec;
 use core::ptr::null;
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 use core::{mem, slice};
-use rlibc::memcmp;
 
 use super::consts::*;
-use super::retcode::*;
+use super::retcode::{BpfResult, BpfErrorCode::*};
 use super::*;
 
 #[repr(C)]
@@ -48,14 +46,14 @@ pub struct MapOpAttr {
 }
 
 pub trait BpfMap {
-    fn lookup(&self, key: *const u8, value: *mut u8) -> SysResult;
-    fn update(&mut self, key: *const u8, value: *const u8, flags: u64) -> SysResult;
-    fn delete(&mut self, key: *const u8) -> SysResult;
-    fn next_key(&self, key: *const u8, next_key: *mut u8) -> SysResult;
+    fn lookup(&self, key: *const u8, value: *mut u8) -> BpfResult;
+    fn update(&mut self, key: *const u8, value: *const u8, flags: u64) -> BpfResult;
+    fn delete(&mut self, key: *const u8) -> BpfResult;
+    fn next_key(&self, key: *const u8, next_key: *mut u8) -> BpfResult;
     fn get_attr(&self) -> InternalMapAttr;
 
     // this lookup is intended for the helper function
-    fn lookup_helper(&self, key: *const u8) -> SysResult;
+    fn lookup_helper(&self, key: *const u8) -> BpfResult;
 }
 
 type HashCode = u32;
@@ -116,9 +114,10 @@ impl HashMap {
         let hashcode = HashMap::hash(kptr, self.attr.key_size);
         if let Some(kvlist) = self.map.get(&hashcode) {
             for kv in kvlist {
-                if unsafe { memcmp(kv.0.as_ptr(), kptr, self.attr.key_size) } == 0 {
-                    return Some(&kv.1);
-                }
+                // if unsafe { memcmp(kv.0.as_ptr(), kptr, self.attr.key_size) } == 0 {
+                //     return Some(&kv.1);
+                // }
+                todo!();
             }
         }
         None
@@ -132,7 +131,7 @@ impl HashMap {
 }
 
 impl BpfMap for ArrayMap {
-    fn lookup(&self, key: *const u8, value: *mut u8) -> SysResult {
+    fn lookup(&self, key: *const u8, value: *mut u8) -> BpfResult {
         let index = unsafe { *(key as *const u32) } as usize;
         if index >= self.attr.max_entries {
             return Err(ENOENT);
@@ -143,7 +142,7 @@ impl BpfMap for ArrayMap {
         Ok(0)
     }
 
-    fn update(&mut self, key: *const u8, value: *const u8, _flags: u64) -> SysResult {
+    fn update(&mut self, key: *const u8, value: *const u8, _flags: u64) -> BpfResult {
         let index = unsafe { *(key as *const u32) } as usize;
         if index >= self.attr.max_entries {
             return Err(ENOENT);
@@ -154,11 +153,11 @@ impl BpfMap for ArrayMap {
         Ok(0)
     }
 
-    fn delete(&mut self, key: *const u8) -> SysResult {
+    fn delete(&mut self, key: *const u8) -> BpfResult {
         Err(EINVAL)
     }
 
-    fn next_key(&self, key: *const u8, next_key: *mut u8) -> SysResult {
+    fn next_key(&self, key: *const u8, next_key: *mut u8) -> BpfResult {
         let out = next_key as *mut u32;
         let index = unsafe { *(key as *const u32) } as usize;
         if index >= self.attr.max_entries {
@@ -182,7 +181,7 @@ impl BpfMap for ArrayMap {
         self.attr
     }
 
-    fn lookup_helper(&self, key: *const u8) -> SysResult {
+    fn lookup_helper(&self, key: *const u8) -> BpfResult {
         let index = unsafe { *(key as *const u32) } as usize;
         if index >= self.attr.max_entries {
             return Err(ENOENT);
@@ -193,7 +192,7 @@ impl BpfMap for ArrayMap {
 }
 
 impl BpfMap for HashMap {
-    fn lookup(&self, key: *const u8, value: *mut u8) -> SysResult {
+    fn lookup(&self, key: *const u8, value: *mut u8) -> BpfResult {
         if let Some(mv) = self.find(key) {
             copy(value, mv.as_ptr(), self.attr.value_size);
             Ok(0)
@@ -202,7 +201,7 @@ impl BpfMap for HashMap {
         }
     }
 
-    fn update(&mut self, key: *const u8, value: *const u8, flags: u64) -> SysResult {
+    fn update(&mut self, key: *const u8, value: *const u8, flags: u64) -> BpfResult {
         // handle different flags, only 1 flags could be given
 
         // check flags
@@ -248,31 +247,32 @@ impl BpfMap for HashMap {
         }
     }
 
-    fn delete(&mut self, key: *const u8) -> SysResult {
+    fn delete(&mut self, key: *const u8) -> BpfResult {
         let hashcode = HashMap::hash(key, self.attr.key_size);
         if let Some(kvlist) = self.map.get_mut(&hashcode) {
             for (i, kv) in kvlist.iter().enumerate() {
-                if unsafe { memcmp(kv.0.as_ptr(), key, self.attr.key_size) } == 0 {
-                    let _ = kvlist.remove(i);
-                    self.total_elems -= 1;
+                // if unsafe { memcmp(kv.0.as_ptr(), key, self.attr.key_size) } == 0 {
+                //     let _ = kvlist.remove(i);
+                //     self.total_elems -= 1;
 
-                    // remove the empty Vec to avoid problems in next_key
-                    if kvlist.is_empty() {
-                        let _ = self.map.remove(&hashcode);
-                    }
-                    return Ok(0);
-                }
+                //     // remove the empty Vec to avoid problems in next_key
+                //     if kvlist.is_empty() {
+                //         let _ = self.map.remove(&hashcode);
+                //     }
+                //     return Ok(0);
+                // }
+                todo!();
             }
         }
         Err(ENOENT)
     }
 
-    fn next_key(&self, key: *const u8, next_key: *mut u8) -> SysResult {
+    fn next_key(&self, key: *const u8, next_key: *mut u8) -> BpfResult {
         let key_size = self.attr.key_size;
         let hashcode = HashMap::hash(key, key_size);
 
         let get_first_key = || {
-            // returns the first valid key
+            //returns the first valid key
             if let Some((_, first_vec)) = self.map.first_key_value() {
                 let first_kv = first_vec.first().unwrap();
                 copy(next_key, first_kv.0.as_ptr(), key_size);
@@ -288,10 +288,12 @@ impl BpfMap for HashMap {
             Some((_, vec)) => {
                 let mut opt_idx = None;
                 for (i, kv) in vec.iter().enumerate() {
-                    if unsafe { memcmp(kv.0.as_ptr(), key, key_size) } == 0 {
-                        opt_idx = Some(i);
-                        break;
-                    }
+                    // if unsafe { memcmp(kv.0.as_ptr(), key, key_size) } == 0 {
+                    //     opt_idx = Some(i);
+                    //     break;
+                    // }
+                    opt_idx = Some(i);
+                    todo!()
                 }
                 if opt_idx.is_none() {
                     return get_first_key();
@@ -320,7 +322,7 @@ impl BpfMap for HashMap {
         self.attr
     }
 
-    fn lookup_helper(&self, key: *const u8) -> SysResult {
+    fn lookup_helper(&self, key: *const u8) -> BpfResult {
         match self.find(key) {
             Some(map_key) => Ok(map_key.as_ptr() as usize),
             None => Err(ENOENT),
@@ -330,7 +332,7 @@ impl BpfMap for HashMap {
 
 pub type SharedBpfMap = Arc<Mutex<dyn BpfMap + Send + Sync>>;
 
-pub fn bpf_map_create(attr: MapAttr) -> SysResult {
+pub fn bpf_map_create(attr: MapAttr) -> BpfResult {
     let internal_attr = InternalMapAttr::from(attr);
     match attr.map_type {
         BPF_MAP_TYPE_ARRAY => {
@@ -355,7 +357,7 @@ pub fn bpf_map_create(attr: MapAttr) -> SysResult {
     }
 }
 
-pub fn bpf_map_close(fd: u32) -> SysResult {
+pub fn bpf_map_close(fd: u32) -> BpfResult {
     bpf_object_remove(fd).map_or(Ok(0), |_| Err(ENOENT))
 }
 
@@ -367,7 +369,7 @@ pub fn bpf_map_get_attr(fd: u32) -> Option<InternalMapAttr> {
     Some(attr)
 }
 
-pub fn bpf_map_ops(fd: u32, op: usize, key: *const u8, value: *mut u8, flags: u64) -> SysResult {
+pub fn bpf_map_ops(fd: u32, op: usize, key: *const u8, value: *mut u8, flags: u64) -> BpfResult {
     let bpf_objs = BPF_OBJECTS.lock();
     let obj = bpf_objs.get(&fd).ok_or(ENOENT)?;
     let shared_map = obj.is_map().ok_or(ENOENT)?;
@@ -381,7 +383,7 @@ pub fn bpf_map_ops(fd: u32, op: usize, key: *const u8, value: *mut u8, flags: u6
     }
 }
 
-pub fn bpf_map_lookup_helper(fd: u32, key: *const u8) -> SysResult {
+pub fn bpf_map_lookup_helper(fd: u32, key: *const u8) -> BpfResult {
     let bpf_objs = BPF_OBJECTS.lock();
     let obj = bpf_objs.get(&fd).ok_or(ENOENT)?;
     let shared_map = obj.is_map().ok_or(ENOENT)?;
