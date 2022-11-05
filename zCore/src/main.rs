@@ -44,6 +44,7 @@ fn primary_main(config: kernel_hal::KernelConfig) {
     let options = utils::boot_options();
     logging::set_max_level(&options.log_level);
     logging::set_max_level("info");
+    info!(options);
     info!("Boot options: {:#?}", options);
     memory::insert_regions(&kernel_hal::mem::free_pmem_regions());
     kernel_hal::primary_init();

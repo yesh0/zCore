@@ -66,6 +66,12 @@ fn copy(dst: *mut u8, src: *const u8, len: usize) {
     to.copy_from_slice(from);
 }
 
+fn memcmp(u: *const _, v: *const _, len: usize) {
+    return unsafe {
+        slice::from_raw_parts(u, len) == slice::from_raw_parts(v, len)
+    }
+}
+
 struct ArrayMap {
     attr: InternalMapAttr,
     storage: Vec<u8>,
@@ -114,10 +120,10 @@ impl HashMap {
         let hashcode = HashMap::hash(kptr, self.attr.key_size);
         if let Some(kvlist) = self.map.get(&hashcode) {
             for kv in kvlist {
-                // if unsafe { memcmp(kv.0.as_ptr(), kptr, self.attr.key_size) } == 0 {
-                //     return Some(&kv.1);
-                // }
-                todo!();
+                let len = self.attr.key_size;
+                if memcmp(kv.0.as_ptr(), kptr, len) {
+                    return Some(&kv.1)
+                }
             }
         }
         None
@@ -251,17 +257,17 @@ impl BpfMap for HashMap {
         let hashcode = HashMap::hash(key, self.attr.key_size);
         if let Some(kvlist) = self.map.get_mut(&hashcode) {
             for (i, kv) in kvlist.iter().enumerate() {
-                // if unsafe { memcmp(kv.0.as_ptr(), key, self.attr.key_size) } == 0 {
-                //     let _ = kvlist.remove(i);
-                //     self.total_elems -= 1;
+                if memcmp(kv.0.as_ptr(), key, self.attr.key_size) {
+                    let _ = kvlist.remove(i);
+                    self.total_elems -= 1;
 
-                //     // remove the empty Vec to avoid problems in next_key
-                //     if kvlist.is_empty() {
-                //         let _ = self.map.remove(&hashcode);
-                //     }
-                //     return Ok(0);
-                // }
-                todo!();
+                    // remove the empty Vec to avoid problems in next_key
+                    if kvlist.is_empty() {
+                        let _ = self.map.remove(&hashcode);
+                    }
+                    return Ok(0);
+                
+                }
             }
         }
         Err(ENOENT)
@@ -288,12 +294,10 @@ impl BpfMap for HashMap {
             Some((_, vec)) => {
                 let mut opt_idx = None;
                 for (i, kv) in vec.iter().enumerate() {
-                    // if unsafe { memcmp(kv.0.as_ptr(), key, key_size) } == 0 {
-                    //     opt_idx = Some(i);
-                    //     break;
-                    // }
-                    opt_idx = Some(i);
-                    todo!()
+                    if memcmp(kv.0.as_ptr(), key, key_size) {
+                        opt_idx = Some(i);
+                        break;
+                    }
                 }
                 if opt_idx.is_none() {
                     return get_first_key();
