@@ -2,7 +2,6 @@ use lock::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::sync::Arc;
 use core::ops::Fn;
-use core::slice::from_raw_parts;
 use lazy_static::*;
 
 use super::arch::*;
@@ -165,44 +164,4 @@ pub fn unregister_kprobe(addr: usize) -> bool {
     } else {
         false
     }
-}
-
-#[no_mangle]
-pub extern "C" fn kprobes_test_ok(i: usize) {
-    info!("[Kprobes test] {} OK", i);
-}
-
-extern "C" {
-    fn kprobes_test_fn_count(); // *i32
-    fn kprobes_test_fns(); // *u64
-    fn kprobes_test_probe_points(); // *u64
-}
-
-fn test_pre_handler(_tf: &mut TrapFrame, _data: usize) -> isize {
-    info!("pre handler for test invoked.");
-    0
-}
-
-fn test_post_handler(_tf: &mut TrapFrame, _data: usize) -> isize {
-    info!("post handler for test invoked.");
-    0
-}
-
-pub fn run_kprobes_tests() {
-    info!("running kprobes tests");
-    unsafe {
-        let nr_tests = *(kprobes_test_fn_count as *const i32) as usize;
-        let test_fns = from_raw_parts(kprobes_test_fns as *const fn(usize), nr_tests);
-        let probes = from_raw_parts(kprobes_test_probe_points as *const usize, nr_tests);
-
-        for (i, &f) in test_fns.iter().enumerate() {
-            register_kprobe(probes[i], KProbeArgs {
-                pre_handler: Arc::new(test_pre_handler),
-                post_handler: Some(Arc::new(test_post_handler)),
-                user_data: 0,
-            });
-            f(0);
-        }
-    }
-    info!("kprobes tests finished");
 }
