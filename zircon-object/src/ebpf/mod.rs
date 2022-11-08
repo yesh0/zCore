@@ -4,8 +4,7 @@ pub mod map;
 pub mod program;
 pub mod tracepoints;
 pub mod retcode;
-
-
+pub mod syscall;
 
 use lock::Mutex;
 use alloc::collections::BTreeMap;

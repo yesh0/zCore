@@ -93,6 +93,22 @@ pub fn bpf_map_ops(fd: u32, op: BpfMapOp, key: *const u8, value: *mut u8, flags:
     }
 }
 
+pub fn bpf_map_lookup_elem(attr: MapOpAttr) -> BpfResult {
+    bpf_map_ops(attr.map_fd, BpfMapOp::LookUp, attr.key as *const u8, attr.value_or_nextkey as *mut u8, attr.flags)   
+}
+
+pub fn bpf_map_update_elem(attr: MapOpAttr) -> BpfResult {
+    bpf_map_ops(attr.map_fd, BpfMapOp::Update, attr.key as *const u8, attr.value_or_nextkey as *mut u8, attr.flags)   
+}
+
+pub fn bpf_map_delete_elem(attr: MapOpAttr) -> BpfResult {
+    bpf_map_ops(attr.map_fd, BpfMapOp::Delete, attr.key as *const u8, attr.value_or_nextkey as *mut u8, attr.flags)   
+}
+
+pub fn bpf_map_get_next_key(attr: MapOpAttr) -> BpfResult {
+    bpf_map_ops(attr.map_fd, BpfMapOp::GetNextKey, attr.key as *const u8, attr.value_or_nextkey as *mut u8, attr.flags)   
+}
+
 // pub fn bpf_map_lookup_helper(fd: u32, key: *const u8) -> BpfResult {
 //     let bpf_objs = BPF_OBJECTS.lock();
 //     let obj = bpf_objs.get(&fd).ok_or(ENOENT)?;
@@ -101,8 +117,6 @@ pub fn bpf_map_ops(fd: u32, op: BpfMapOp, key: *const u8, value: *mut u8, flags:
 //     map.lookup_helper(key)
 // }
 
-// pub fn bpf_map_lookup_elem(attr: MapOpAttr) -> BpfResult {
-//     bpf_map_ops(attr.map_fd, BPF_MAP_LOOKUP_ELEM, attr.key as *const u8, attr.value_or_nextkey as *mut u8, attr.flags)
-// }
+
 
 // pub fn bpf_map_update_elem();
