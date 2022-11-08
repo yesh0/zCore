@@ -32,5 +32,6 @@ pub mod task;
 pub mod util;
 pub mod vm;
 pub mod probe;
+pub mod symbol;
 
 pub use self::error::*;
