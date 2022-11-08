@@ -8,6 +8,7 @@ numeric_enum! {
 
     #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Hash)]
     pub enum BpfCommand {
+        #[allow(non_camel_case_types)]
         BPF_MAP_CREATE = 0,
         BPF_MAP_LOOKUP_ELEM = 1,
         BPF_MAP_UPDATE_ELEM = 2,

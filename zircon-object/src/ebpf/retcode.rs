@@ -7,6 +7,7 @@
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
 pub enum BpfErrorCode {
+    #[allow(non_camel_case_types)]
     EUNDEF = 0,
     EPERM = 1,
     ENOENT = 2,

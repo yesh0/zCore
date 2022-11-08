@@ -1,12 +1,16 @@
 
 
+// ! OS dependent part
+
 use super::{
     map::*,
+    map::MapAttr,
+    map::MapOpAttr,
 };
 
 
-
 pub fn sys_bpf_map_create(attr: *const _, size: u32) -> i32 {
+    assert_eq!(size == sizeof(MapAttr));
     let map_attr = unsafe {
         *(attr as *const MapAttr)
     };
@@ -18,7 +22,10 @@ pub fn sys_bpf_map_create(attr: *const _, size: u32) -> i32 {
 }
 
 pub fn sys_bpf_map_lookup_elem(attr: *const _, size: u32) -> i32 {
-    todo!()
+    assert_eq!(size == sizeof(MapOpAttr));
+    let map_op_attr = unsafe {
+        *(attr as *const MapOpAttr)
+    };
 }
 
 pub fn sys_bpf_map_update_elem(attr: *const _, size: u32) -> i32 {

@@ -3,7 +3,6 @@ use core::ptr::{null, null_mut};
 use super::{
     retcode::*,
     consts::*,
-    map::{bpf_map_lookup_helper, bpf_map_ops},
 };
 
 pub type BpfHelperFn = fn(u64, u64, u64, u64, u64) -> i64;
