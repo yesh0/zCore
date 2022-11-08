@@ -1,34 +1,35 @@
 import argparse
 import subprocess
+import os
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Dump symbol table")
     parser.add_argument("kernel", help="kernel file path")
-    parser.add_argument("arch", help="e.g. riscv64-unknown-elf-")
+    parser.add_argument("arch", help="e.g. riscv64")
+    parser.add_argument("path", help="dir of the symbol table")
     args = parser.parse_args()
     print(args)
     
-    CMD_NM = args.arch + "nm"
-    CMD_OBJDUMP = args.arch + "objdump"
+    # TODO: no adhoc
+    CMD_NM = args.arch + "-unknown-elf-" + "nm"
+    CMD_OBJDUMP = args.arch  + "-unknown-elf-" + "objdump"
     file = args.kernel
+    sym_path = os.path.join(args.path, "kernel.sym")
+    obj_path = os.path.join(args.path, "kernel.obj")
     
-    # TODO: combine external symbols with -D?
+    if not os.path.exists(args.path):
+        os.mkdir(args.path)
+
     demangled_output = subprocess.check_output([
         CMD_NM, '-C', '-n',
         file])
-    with open('./sym_demangled.txt', 'wb') as f:
+    with open(sym_path, 'wb') as f:
         f.write(demangled_output)
-    
-    demangled_output_ext = subprocess.check_output([
-        CMD_NM, '-C', '-g', '-n',
-        file])
-    with open('./ext_sym_demangled.txt', 'wb') as f:
-        f.write(demangled_output_ext)
     
     dump = subprocess.check_output([
         CMD_OBJDUMP, '-D', '-j', '.text', '-F', '-C',
         file])
-    with open('./objdump.txt', 'wb') as f:
+    with open(obj_path, 'wb') as f:
         f.write(dump)
     
-    print("Done!")
+    print("Done dumping symbol table to " + sym_path)
