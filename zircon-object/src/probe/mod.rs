@@ -87,4 +87,5 @@ pub fn run_tests() {
     tests::kprobes_test::run_kprobes_tests();
     tests::kretprobes_test::run_kretprobes_test();
     tests::trace_test::run_dynamic_trace_test();
+    info!("kprobe tests passed");
 }

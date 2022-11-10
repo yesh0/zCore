@@ -2,7 +2,7 @@ use lock::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::collections::btree_set::BTreeSet;
 use alloc::vec::Vec;
-use alloc::string::{String, ToString};
+use alloc::string::String;
 use alloc::sync::Arc;
 use lazy_static::lazy_static;
 use crate::symbol::*;
@@ -87,7 +87,7 @@ fn dynamic_trace_kprobe_post_handler(tf: &mut TrapFrame, _data: usize) -> isize 
 /// Add tracepoint to all function calls in the given function
 pub fn trace_root_function(fn_entry: usize) {
     let range = symbol_table_with(|ksymbols| {
-        find_function_range(ksymbols, fn_entry)
+        find_function_range(&ksymbols.kernel_symbols, fn_entry)
     }).unwrap();
 
     let count = foreach_function_call(range, |addr| {
@@ -103,8 +103,11 @@ pub fn trace_root_function(fn_entry: usize) {
             }
         })
     });
-    let name = addr_to_symbol(fn_entry).unwrap_or("unknown".to_string());
-    info!("{} call instructions found for {}", count, name);
+
+    symbol_table_with(|ksymbols| {
+        let name = ksymbols.find_symbol(fn_entry).unwrap().0;
+        info!("{} call instructions found for {}", count, name);
+    });
 
     trace_samples_with(|samples| {
         samples.targets.insert(fn_entry, samples.depth);

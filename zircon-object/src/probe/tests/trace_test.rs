@@ -1,6 +1,5 @@
 use super::trace;
-use crate::symbol::addr_to_symbol;
-use crate::alloc::string::ToString;
+use crate::symbol::{symbol_table_with};
 
 #[inline(never)]
 fn bar(x: isize) -> isize {
@@ -64,8 +63,10 @@ pub fn run_dynamic_trace_test() {
     t.l0();
     trace::trace_samples_with(|samples| {
         for (&addr, &depth) in &samples.targets {
-            let name = addr_to_symbol(addr).unwrap_or("unknown".to_string());
-            warn!("function {} at depth {})", name, depth);
+            symbol_table_with(|ksymbols| {
+                let name = ksymbols.find_symbol(addr).unwrap().0;
+                warn!("function {} at depth {})", name, depth);
+            });
         }
     });
     trace::unregister_all();

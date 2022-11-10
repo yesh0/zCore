@@ -5,9 +5,9 @@ use lock::Mutex;
 use lazy_static::lazy_static;
 global_asm!(include_str!("symbol_table.asm"));
 
-struct SymbolTable {
+pub struct SymbolTable {
     // sorted by address
-    kernel_symbols: Vec<(String, usize)>,
+    pub kernel_symbols: Vec<(String, usize)>,
 }
 
 lazy_static! {
@@ -35,7 +35,7 @@ impl SymbolTable {
         None
     }
 
-    pub fn find_symbol(&self, addr: usize) -> Option<&(String, usize)> {
+    pub fn find_symbol(&self, addr: usize) -> Option<(&str, usize)> {
         let mut l: usize = 0;
         let mut r = self.kernel_symbols.len();
         while l < r {
@@ -47,7 +47,7 @@ impl SymbolTable {
             }
         }
         if l > 0 {
-            Some(&self.kernel_symbols[l - 1])
+            Some((&self.kernel_symbols[l - 1].0, self.kernel_symbols[l - 1].1))
         } else {
             None
         }
@@ -112,14 +112,8 @@ pub fn symbol_to_addr(name: &str) -> Option<usize> {
     SYMBOL_TABLE.lock().as_ref().unwrap().translate(name)
 }
 
-pub fn addr_to_symbol(addr: usize) -> Option<String> {
+pub fn symbol_table_with<T>(f: impl FnOnce(&SymbolTable) -> T) -> T {
     let table = SYMBOL_TABLE.lock();
-    table.as_ref().unwrap().find_symbol(addr)
-    .map(|(name, _)| name.clone())
-}
-
-pub fn symbol_table_with<T>(f: impl FnOnce(&Vec<(String, usize)>) -> T) -> T {
-    let table = SYMBOL_TABLE.lock();
-    let symbols = table.as_ref().unwrap().kernel_symbols.as_ref();
+    let symbols = table.as_ref().unwrap();
     f(symbols)
 }

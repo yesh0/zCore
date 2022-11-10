@@ -22,6 +22,7 @@ mod fs;
 mod handler;
 mod platform;
 mod utils;
+mod backtrace;
 
 cfg_if! {
     if #[cfg(target_arch = "x86_64")] {
