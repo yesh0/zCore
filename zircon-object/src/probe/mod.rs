@@ -86,9 +86,5 @@ pub fn run_tests() {
     info!("running kprobe tests");
     tests::kprobes_test::run_kprobes_tests();
     tests::kretprobes_test::run_kretprobes_test();
-    /*
-    if arch::cpu::id() == 0 {
-        kprobes::trace::run_dynamic_trace_test();
-    }
-    */
+    tests::trace_test::run_dynamic_trace_test();
 }

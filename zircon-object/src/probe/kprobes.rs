@@ -139,7 +139,7 @@ pub fn register_kprobe(addr: usize, args: KProbeArgs) -> bool {
 
     ADDR_MAP.lock().insert(next_bp_addr, addr);
     map.insert(addr, probe);
-    warn!(
+    info!(
         "kprobe for address {:#x} inserted. {} kprobes registered",
         addr,
         map.len()

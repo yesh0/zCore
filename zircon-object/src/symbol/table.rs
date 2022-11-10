@@ -22,6 +22,7 @@ impl SymbolTable {
     }
 
     pub fn add_symbol(&mut self, name: String, addr: usize) {
+        info!("add symbol: {:x} {}", addr, name);
         self.kernel_symbols.push((name, addr));
     }
 
@@ -32,6 +33,24 @@ impl SymbolTable {
             }
         }
         None
+    }
+
+    pub fn find_symbol(&self, addr: usize) -> Option<&(String, usize)> {
+        let mut l: usize = 0;
+        let mut r = self.kernel_symbols.len();
+        while l < r {
+            let m = l + (r - l) / 2;
+            if self.kernel_symbols[m].1 <= addr {
+                l = m + 1;
+            } else {
+                r = m;
+            }
+        }
+        if l > 0 {
+            Some(&self.kernel_symbols[l - 1])
+        } else {
+            None
+        }
     }
 
     pub fn init_kernel_symbols(&mut self, kernel_symbols: &str) {
@@ -89,6 +108,18 @@ pub fn init_symbol_table() {
     SymbolTable::init();
 }
 
-pub fn translate(name: &str) -> Option<usize> {
+pub fn symbol_to_addr(name: &str) -> Option<usize> {
     SYMBOL_TABLE.lock().as_ref().unwrap().translate(name)
+}
+
+pub fn addr_to_symbol(addr: usize) -> Option<String> {
+    let table = SYMBOL_TABLE.lock();
+    table.as_ref().unwrap().find_symbol(addr)
+    .map(|(name, _)| name.clone())
+}
+
+pub fn symbol_table_with<T>(f: impl FnOnce(&Vec<(String, usize)>) -> T) -> T {
+    let table = SYMBOL_TABLE.lock();
+    let symbols = table.as_ref().unwrap().kernel_symbols.as_ref();
+    f(symbols)
 }
