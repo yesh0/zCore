@@ -1,4 +1,4 @@
-use core::arch::{asm, global_asm};
+use core::arch::{asm};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 use riscv_decode::{CompressedInstruction::*, Instruction::*, *};
 use trapframe::TrapFrame;
@@ -259,5 +259,3 @@ pub fn foreach_function_call(code_range: (usize, usize), action: impl FnOnce(usi
     }
     count
 }
-
-global_asm!(include_str!("test.S"));

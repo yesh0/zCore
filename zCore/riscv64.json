@@ -22,5 +22,6 @@
   },
   "max-atomic-width": 64,
   "panic-strategy": "abort",
-  "relocation-model": "static"
+  "relocation-model": "static",
+  "eliminate-frame-pointer": false
 }

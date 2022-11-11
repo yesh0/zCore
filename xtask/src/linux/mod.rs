@@ -33,6 +33,7 @@ impl LinuxRootfs {
         // 准备最小系统需要的资源
         let musl = self.0.linux_musl_cross();
         let busybox = self.busybox(&musl);
+        let symbol_table = self.symbol_table();
         // 创建目标目录
         let bin = dir.join("bin");
         let lib = dir.join("lib");
@@ -41,6 +42,8 @@ impl LinuxRootfs {
         fs::create_dir(&lib).unwrap();
         // 拷贝 busybox
         fs::copy(busybox, bin.join("busybox")).unwrap();
+        // 拷贝 symbol table
+        fs::copy(symbol_table, self.path().join("kernel.sym")).unwrap();
         // 拷贝 libc.so
         let from = musl
             .join(format!("{}-linux-musl", self.0.name()))
@@ -74,6 +77,10 @@ impl LinuxRootfs {
     #[inline]
     pub fn path(&self) -> PathBuf {
         PROJECT_DIR.join("rootfs").join(self.0.name())
+    }
+
+    fn symbol_table(&self) -> PathBuf {
+        PROJECT_DIR.join("ignored").join("dump").join("kernel.sym")
     }
 
     /// 编译 busybox。

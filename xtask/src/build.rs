@@ -129,6 +129,17 @@ impl BuildConfig {
         // 确定目录
         let obj = self.target_file_path();
         let out = output.unwrap_or_else(|| obj.with_extension("bin"));
+        // nm获取符号表并将符号表写入elf，全部在python中完成
+        let fill = PROJECT_DIR.join("tools").join("fill").join("fill.py");
+        use std::process::Command;
+        let fill_out = Command::new("python3")
+            .arg(fill.as_os_str())
+            .arg(obj.as_os_str())
+            .arg(self.arch.name())
+            .arg(PROJECT_DIR.join("ignored").join("dump").as_os_str())
+            .output()
+            .expect("Failed to execute fill.py");
+        println!("{}", String::from_utf8_lossy(&fill_out.stdout));
         // 生成
         println!("strip zcore to {}", out.display());
         dir::create_parent(&out).unwrap();
@@ -169,8 +180,6 @@ impl OutArgs {
 impl QemuArgs {
     /// 在 qemu 中启动。
     pub fn qemu(self) {
-        // 递归 image
-        self.arch.linux_rootfs().image();
         // 构造各种字符串
         let arch = self.arch.arch;
         let arch_str = arch.name();
@@ -185,6 +194,8 @@ impl QemuArgs {
             debug: self.debug,
         })
         .bin(None);
+        // 递归 image，因为要获取符号表放入rootfs所以放到了后面
+        self.arch.linux_rootfs().image();
         // 设置 Qemu 参数
         let mut qemu = Qemu::system(arch_str);
         qemu.args(&["-m", "2G"])
