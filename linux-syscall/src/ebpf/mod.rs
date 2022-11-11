@@ -1,6 +1,11 @@
 //! eBPF system call 
 //!
 //! - bpf(2)
+#![allow(dead_code)]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(unreachable_code)]
+#![allow(unreachable_patterns)]
 
 use super::*;
 use alloc::string::String;
@@ -22,7 +27,7 @@ impl Syscall<'_> {
 
     pub fn sys_bpf(&self, cmd: i32, bpf_attr: *const u8 , size: u32) -> i32 {
         if let Ok(bpf_cmd) = BpfCommand::try_from(cmd) {
-            use BpfCommand;
+            use BpfCommand::*;
             match bpf_cmd {
                 BPF_MAP_CREATE => sys_bpf_map_create(bpf_attr, size),
                 BPF_MAP_LOOKUP_ELEM => sys_bpf_map_lookup_elem(bpf_attr, size),
@@ -39,7 +44,7 @@ impl Syscall<'_> {
         }
     }
 
-
+    #[allow(unused_mut)]
     fn sys_temp_bpf_program_load_ex(&self, attr_ptr: *const u8, size: u32) -> i32 {
         let ptr = UserInPtr::<ProgramLoadExAttr>::from(attr_ptr as usize);
         let attr = ptr.read().unwrap();
@@ -49,7 +54,7 @@ impl Syscall<'_> {
         let vm = self.zircon_process().vmar();
         let mut prog = vec![0 as u8; size];
         let buf = &mut prog[..];
-        let actual_read = vm.read_memory(base as usize, buf).unwrap();
+        let mut actual_read = vm.read_memory(base as usize, buf).unwrap();
         assert_eq!(actual_read, size);
 
         let arr_len = attr.map_array_len as usize;
@@ -64,7 +69,7 @@ impl Syscall<'_> {
             let entry = &map_fd_array[i];
             let name = "";
             //let name = check_and_clone_cstr(entry.name)?;
-            map_info.push((name, entry.fd));
+            //map_info.push((name, entry.fd));
         }
         sys_bpf_program_load_ex(&mut prog[..], &map_info[..]);
         -1

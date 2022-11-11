@@ -95,7 +95,7 @@ fn kretprobe_exit_handler(tf: &mut TrapFrame, probed_addr: usize) -> isize {
     0
 }
 
-fn resolve_symbol(symbol: &str) -> Option<usize> {
+fn resolve_symbol(_symbol: &str) -> Option<usize> {
     // TODO resolve symbol
     //ModuleManager::with(|mm| mm.resolve_symbol(symbol))
     todo!();

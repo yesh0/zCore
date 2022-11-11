@@ -6,7 +6,6 @@ use super::{
     map::*,
     map::MapAttr,
     map::MapOpAttr,
-    program::ProgramLoadExAttr,
     retcode::BpfResult,
 };
 
@@ -91,7 +90,7 @@ pub fn sys_bpf_map_delete_elem(attr: *const u8, size: u32) -> i32 {
     convert_result(bpf_map_delete_elem(map_op_attr))
 }
 
-pub fn sys_bpf_program_attach(attr: *const u8, size: u32) -> i32 {
+pub fn sys_bpf_program_attach(_attr: *const u8, _size: u32) -> i32 {
     todo!()
 }
 

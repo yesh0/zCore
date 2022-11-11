@@ -1,7 +1,6 @@
 
 use super::{
     MapAttr,
-    MapOpAttr,
     BpfResult,
 };
 

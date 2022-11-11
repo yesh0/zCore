@@ -1,6 +1,5 @@
 use super::{
     BpfResult,
-    consts::*,
     retcode::BpfErrorCode::*,
 };
 use super::internal::{
@@ -55,7 +54,7 @@ impl BpfMap for ArrayMap {
         Ok(0)
     }
 
-    fn delete(&mut self, key: *const u8) -> BpfResult {
+    fn delete(&mut self, _key: *const u8) -> BpfResult {
         Err(EINVAL)
     }
 

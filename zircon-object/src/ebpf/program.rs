@@ -56,7 +56,7 @@ impl BpfProgram {
 
 // #[cfg(target_arch = "riscv64")]
 pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfResult {
-    let base = prog.as_ptr();
+    let _base = prog.as_ptr();
     let elf = xmas_elf::ElfFile::new(prog).map_err(|_| EINVAL)?;
     match elf.header.pt2.machine().as_machine() {
         Machine::BPF => (), // machine type must be BPF
@@ -70,7 +70,6 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
     }
 
     // build index -> map_fd variable address mapping
-    use alloc::collections::BTreeMap;
     let mut map_symbols = BTreeMap::new();
     let sym_tab_hdr = elf.find_section_by_name(".symtab").ok_or(ENOENT)?;
     if let Ok(SectionData::SymbolTable64(sym_entries)) = sym_tab_hdr.get_data(&elf) {

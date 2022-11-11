@@ -79,6 +79,7 @@ pub fn bpf_map_get_attr(fd: u32) -> Option<InternalMapAttr> {
     Some(attr)
 }
 
+#[allow(unreachable_patterns)]
 pub fn bpf_map_ops(fd: u32, op: BpfMapOp, key: *const u8, value: *mut u8, flags: u64) -> BpfResult {
     let bpf_objs = BPF_OBJECTS.lock();
     let obj = bpf_objs.get(&fd).ok_or(ENOENT)?;

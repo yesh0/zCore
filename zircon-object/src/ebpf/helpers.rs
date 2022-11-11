@@ -1,6 +1,5 @@
 use super::{
     retcode::*,
-    consts::*,
     syscall::*,
 };
 
@@ -82,7 +81,7 @@ fn bpf_helper_ktime_get_ns(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
 }
 
 // long bpf_trace_printk(const char *fmt, u32 fmt_size, ...)
-fn bpf_helper_trace_printk(fmt: u64, fmt_size: u64, p1: u64, p2: u64, p3: u64) -> i64 {
+fn bpf_helper_trace_printk(fmt: u64, fmt_size: u64, _p1: u64, _p2: u64, _p3: u64) -> i64 {
     // // TODO: check pointer
     let _fmt = unsafe { core::slice::from_raw_parts(fmt as *const u8, fmt_size as u32 as usize) };
     // info!(
@@ -110,7 +109,7 @@ fn bpf_helper_get_current_pid_tgid(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) 
     ((pid << 32) | pid) as i64
 }
 
-fn bpf_helper_get_current_comm(dst: u64, buf_size: u64, _1: u64, _2: u64, _3: u64) -> i64 {
+fn bpf_helper_get_current_comm(_dst: u64, _buf_size: u64, _1: u64, _2: u64, _3: u64) -> i64 {
     // let thread = current_thread().unwrap();
     // let exec_str = thread.proc.busy_lock().exec_path.clone();
     // let exec_path = exec_str.as_bytes();
