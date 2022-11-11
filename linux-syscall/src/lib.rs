@@ -15,7 +15,7 @@
 //!
 
 #![no_std]
-#![deny(warnings, unsafe_code, missing_docs)]
+//#![deny(warnings, unsafe_code, missing_docs)]
 #![allow(clippy::upper_case_acronyms)]
 
 #[macro_use]
@@ -49,6 +49,7 @@ mod signal;
 mod task;
 mod time;
 mod vm;
+mod ebpf;
 
 /// The struct of Syscall which stores the information about making a syscall
 pub struct Syscall<'a> {

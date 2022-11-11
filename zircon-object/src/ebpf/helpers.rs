@@ -1,5 +1,3 @@
-use core::ptr::{null, null_mut};
-
 use super::{
     retcode::*,
     consts::*,
@@ -46,7 +44,7 @@ fn bpf_helper_nop(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
     0
 }
 
-fn probe_read_user(dst: *mut u8, src: *const u8, len: usize) -> BpfResult {
+fn probe_read_user(_dst: *mut u8, _src: *const u8, _len: usize) -> BpfResult {
     // let thread = current_thread().unwrap();
     // let vm = thread.vm.lock();
     // let src_slice = unsafe { vm.check_read_array(src, len)? };
@@ -57,7 +55,7 @@ fn probe_read_user(dst: *mut u8, src: *const u8, len: usize) -> BpfResult {
 }
 
 // long bpf_probe_read(void *dst, u32 size, const void *unsafe_ptr)
-fn bpf_helper_probe_read(dst: u64, size: u64, src: u64, _1: u64, _2: u64) -> i64 {
+fn bpf_helper_probe_read(_dst: u64, _size: u64, _src: u64, _1: u64, _2: u64) -> i64 {
     // let src_addr = src as usize;
     // let dst_addr = dst as usize;
     // let len = size as usize;
@@ -86,7 +84,7 @@ fn bpf_helper_ktime_get_ns(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
 // long bpf_trace_printk(const char *fmt, u32 fmt_size, ...)
 fn bpf_helper_trace_printk(fmt: u64, fmt_size: u64, p1: u64, p2: u64, p3: u64) -> i64 {
     // // TODO: check pointer
-    let fmt = unsafe { core::slice::from_raw_parts(fmt as *const u8, fmt_size as u32 as usize) };
+    let _fmt = unsafe { core::slice::from_raw_parts(fmt as *const u8, fmt_size as u32 as usize) };
     // info!(
     //     "{}"//,
     //     // dyn_fmt::Arguments::new(

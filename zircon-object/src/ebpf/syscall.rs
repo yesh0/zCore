@@ -6,14 +6,13 @@ use super::{
     map::*,
     map::MapAttr,
     map::MapOpAttr,
+    program::ProgramLoadExAttr,
     retcode::BpfResult,
 };
 
 use core::mem::size_of;
+use crate::ebpf::program::bpf_program_load_ex;
 use crate::object::{task::Thread, KernelObject};
-use kernel_hal::thread;
-use kernel_hal::timer::timer_now;
-use kernel_hal::cpu::cpu_id;
 use alloc::sync::Arc;
 use alloc::string::String;
 
@@ -96,6 +95,8 @@ pub fn sys_bpf_program_attach(attr: *const u8, size: u32) -> i32 {
     todo!()
 }
 
-pub fn sys_bpf_program_load_ex(attr: *const u8, size: u32) -> i32 {
-    todo!()
+
+// this is a custome function, so we just copy from rCore
+pub fn sys_bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> i32 {  
+    convert_result(bpf_program_load_ex(prog, &map_info))
 }
