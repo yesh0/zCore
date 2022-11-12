@@ -1,5 +1,5 @@
 ﻿use super::join_path_env;
-use crate::{commands::wget, Arch};
+use crate::{commands::wget, Arch, PROJECT_DIR};
 use os_xtask_utils::{dir, CommandExt, Ext, Make, Tar};
 use std::{
     collections::HashSet,
@@ -71,7 +71,9 @@ impl super::LinuxRootfs {
         }
     }
 
+
     /// 将其他测试放入 rootfs。
+    #[allow(unreachable_code)]
     pub fn put_other_test(&self) {
         // 递归 rootfs
         self.make(false);
@@ -82,6 +84,9 @@ impl super::LinuxRootfs {
             .linux_musl_cross()
             .join("bin")
             .join(format!("{}-linux-musl-gcc", self.0.name()));
+
+
+
         fs::read_dir("linux-syscall/test")
             .unwrap()
             .filter_map(|res| res.ok())
@@ -98,6 +103,66 @@ impl super::LinuxRootfs {
         if let Arch::Riscv64 = self.0 {
             dircpy::copy_dir(riscv64_special().join("oscomp"), self.path().join("oscomp")).unwrap();
         }
+
+        // add tests for eBPF utility 
+        // note that ebpf tests are located at linux-syscall/test/ebpf
+        // and are filtered out previously
+
+
+        // bpf kern
+        println!("Compiling bpf kern progs!");
+
+        let sh_dir = PROJECT_DIR.join("linux-syscall").join("test").join("ebpf").join("build.sh");
+        use std::process::Command;
+        let ebpf_test = Command::new("bash")
+            .arg(sh_dir.as_os_str())
+            .output()
+            .expect("failed to compile eBPF test!");
+        if ebpf_test.status.code().unwrap() == -1 {
+            panic!("eBPF test: clang12 not found, exit!")
+        }
+        let mut output = &ebpf_test.stderr;
+        println!("{}", std::str::from_utf8(output).unwrap());
+        output = &ebpf_test.stdout;
+        println!("{}", std::str::from_utf8(output).unwrap());
+        // bpf user 
+
+        println!("Compiling ebpf user test!");
+        let lib_path = PROJECT_DIR.join("linux-syscall").join("test").join("ebpf").join("user").join("bpf.c");
+        
+        // !fixme 
+        // very strange indeed!
+        // i cannot use the musl before
+        // i don't know why
+
+        let mut musl_gcc = PathBuf::new();
+        musl_gcc.push("/home/s2020012692/env/riscv64-linux-musl-cross/bin/riscv64-linux-musl-gcc");
+
+
+        println!("lib path: {}", lib_path.as_os_str().to_str().unwrap());
+        println!("musl path: {}", musl_gcc.as_os_str().to_str().unwrap());
+        fs::read_dir("linux-syscall/test/ebpf/user")
+        .unwrap()
+        .filter_map(|res| res.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.file_stem().map_or(false, 
+            |name| name != OsStr::new("bpf")))
+        .filter(|path| path.extension().map_or(false, 
+                |name| name == OsStr::new("c")))
+        .for_each(|c| {
+            let mut exe = c.file_stem().unwrap().to_os_string().clone();
+            exe.push(".exe");
+            println!("MUSL C {}", exe.as_os_str().to_str().unwrap());
+            let mut prog = Ext::new(&musl_gcc);
+                prog
+                .arg(&c)
+                .arg(&lib_path) // add bpf
+                .arg("-o")
+                .arg(bin.join(exe))
+                .invoke();
+        });
+        
+            
     }
 }
 

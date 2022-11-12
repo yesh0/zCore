@@ -6,11 +6,12 @@
 //! - `hypervisor`: Enables `zircon_object::hypervisor` (`Guest` and `Vcpu`).
 
 #![no_std]
-#![deny(warnings)]
+// #![deny(warnings)]
 // #![deny(missing_docs)] 形同虚设了
+#![feature(map_first_last)]
 
-#![feature(map_first_last)] // OK rust lol
 
+#[macro_use]
 extern crate alloc;
 
 #[macro_use]
@@ -33,5 +34,7 @@ pub mod util;
 pub mod vm;
 pub mod probe;
 pub mod symbol;
+
+pub mod ebpf;
 
 pub use self::error::*;

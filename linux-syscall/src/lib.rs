@@ -15,7 +15,7 @@
 //!
 
 #![no_std]
-#![deny(warnings, unsafe_code, missing_docs)]
+//#![deny(warnings, unsafe_code, missing_docs)]
 #![allow(clippy::upper_case_acronyms)]
 
 #[macro_use]
@@ -49,6 +49,7 @@ mod signal;
 mod task;
 mod time;
 mod vm;
+mod ebpf;
 
 /// The struct of Syscall which stores the information about making a syscall
 pub struct Syscall<'a> {
@@ -257,6 +258,8 @@ impl Syscall<'_> {
             #[cfg(not(target_arch = "aarch64"))]
             Sys::BLOCK_IN_KERNEL => self.sys_block_in_kernel(),
 
+            Sys::BPF => self.sys_bpf(a0 as i32, a1.into(), a2),
+
             #[cfg(target_arch = "x86_64")]
             _ => self.x86_64_syscall(sys_type, args).await,
             #[cfg(target_arch = "riscv64")]
@@ -264,6 +267,9 @@ impl Syscall<'_> {
             #[cfg(target_arch = "aarch64")]
             _ => self.aarch64_syscall(sys_type, args).await,
         };
+        if Sys::try_from(num).unwrap() == Sys::BPF  {
+            error!("syscall result: {:?}", ret);
+        }
         info!("<= {:?}", ret);
         match ret {
             Ok(value) => value as isize,
