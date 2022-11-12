@@ -46,7 +46,8 @@ int main() {
     printf("load ex: %x\n", bpf_fd);
 
     //const char *target = "kprobe:_RNvMNtNtCs6EJUG5qC0e6_5rcore7syscall4procNtB4_7Syscall8sys_fork";
-    const char *target = "kprobe:<rcore::syscall::Syscall>::sys_fork";
+
+    const char *target = "kprobe$linux_syscall::file::fd::<impl linux_syscall::Syscall>::sys_openat";
     uint32_t str_len = strlen(target);
     printf("target: %s len: %d\n", target, str_len);
     printf("attach: %d\n", bpf_prog_attach(target, str_len, bpf_fd));
@@ -55,6 +56,8 @@ int main() {
 
     printf("busy loop");
     while (1) {
+        printf("try open");
+        int fd = open("./context.o", O_RDONLY);
         sleep(1);
     }
     return 0;

@@ -93,7 +93,7 @@ pub fn sys_bpf_map_delete_elem(attr: *const u8, size: usize) -> i32 {
 }
 
 pub fn sys_bpf_program_attach(attr: *const u8, size: usize) -> i32 {
-    assert_eq!(size, size_of::<KprobeAttachAttr>());
+  //  assert_eq!(size, size_of::<KprobeAttachAttr>());
     let attach_attr = unsafe {
         *(attr as *const KprobeAttachAttr)
     };
@@ -108,6 +108,9 @@ pub fn sys_bpf_program_attach(attr: *const u8, size: usize) -> i32 {
 
 
 // this is a custome function, so we just copy from rCore
-pub fn sys_bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> i32 {  
-    convert_result(bpf_program_load_ex(prog, &map_info))
+pub fn sys_bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> i32 {
+    //error!("loaded prog:\n{:?}", prog);  
+    let ret = convert_result(bpf_program_load_ex(prog, &map_info));
+    error!("load ex ret: {}", ret);
+    ret
 }

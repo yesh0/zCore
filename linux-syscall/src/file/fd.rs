@@ -22,6 +22,7 @@ impl Syscall<'_> {
         flags: usize,
         mode: usize,
     ) -> SysResult {
+        warn!("sys openat called!");
         let proc = self.linux_process();
         let path = path.as_c_str()?;
         // hard code special path

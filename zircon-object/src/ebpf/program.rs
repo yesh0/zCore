@@ -157,7 +157,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
     };
     let fd = bpf_allocate_fd();
     bpf_object_create_program(fd, program);
-    error!("OK");
+    error!("OK fd: {}", fd);
     Ok(fd as usize)
 }
 

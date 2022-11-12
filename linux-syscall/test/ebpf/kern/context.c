@@ -2,6 +2,7 @@
 #include "kprobe.h"
 
 int bpf_prog(struct kprobe_bpf_ctx *ctx) {
+  bpf_trace_printk("triggered!\n", 0, 0, 0);
   // report tracepoint type
   if (ctx->ptype == 0)
     bpf_trace_printk("kprobe", 0, 0, 0);

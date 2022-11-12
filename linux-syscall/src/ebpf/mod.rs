@@ -30,7 +30,7 @@ impl Syscall<'_> {
         let ptr = bpf_attr as *const u8;
         if let Ok(bpf_cmd) = BpfCommand::try_from(cmd) {
             use BpfCommand::*;
-            match bpf_cmd {
+            let ret = match bpf_cmd {
                 BPF_MAP_CREATE => sys_bpf_map_create(ptr, size),
                 BPF_MAP_LOOKUP_ELEM => sys_bpf_map_lookup_elem(ptr, size),
                 BPF_MAP_UPDATE_ELEM => sys_bpf_map_update_elem(ptr, size),
@@ -41,7 +41,10 @@ impl Syscall<'_> {
                 BPF_PROG_DETACH => todo!(),
                 BPF_PROG_LOAD_EX => self.sys_temp_bpf_program_load_ex(ptr, size),
             };
-            Ok(0)
+            if ret < 0 {
+                panic!("negative return value!");
+            }
+            Ok(ret as usize)
         } else {
             Err(LxError::ENOSYS)
         }
@@ -75,7 +78,6 @@ impl Syscall<'_> {
             //let name = check_and_clone_cstr(entry.name)?;
             //map_info.push((name, entry.fd));
         }
-        sys_bpf_program_load_ex(&mut prog[..], &map_info[..]);
-        -1
+        sys_bpf_program_load_ex(&mut prog[..], &map_info[..])
     }
 }
