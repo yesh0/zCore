@@ -1,4 +1,10 @@
 #include "bpf.h"
+#include <unistd.h>
+
+int sys_bpf(int cmd, union bpf_attr *attr, size_t size) {
+    return syscall(SYS_bpf, cmd, attr, size);
+}
+
 
 int 
 bpf_create_map(enum bpf_map_type map_type, uint32_t key_size, uint32_t value_size, uint32_t max_entries) {

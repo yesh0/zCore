@@ -7,7 +7,7 @@
 #include <inttypes.h>
 
 int main() {
-    syscall(SYS_bpf, , NULL, 0);
+    syscall(SYS_bpf, 0, NULL, 0);
     // while (1) ;
     return 0;
 }
