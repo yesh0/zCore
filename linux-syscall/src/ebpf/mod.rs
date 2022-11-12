@@ -25,22 +25,25 @@ use kernel_hal::user::{Out, UserInPtr, UserOutPtr, UserPtr};
 
 impl Syscall<'_> {
 
-    pub fn sys_bpf(&self, cmd: i32, bpf_attr: *const u8 , size: u32) -> i32 {
+    pub fn sys_bpf(&self, cmd: i32, bpf_attr: usize , size: u32) -> SysResult {
+        error!("SYS_bpf cmd: {}, bpf_attr: {}, size: {}", cmd, bpf_attr, size);
+        let ptr = bpf_attr as *const u8;
         if let Ok(bpf_cmd) = BpfCommand::try_from(cmd) {
             use BpfCommand::*;
             match bpf_cmd {
-                BPF_MAP_CREATE => sys_bpf_map_create(bpf_attr, size),
-                BPF_MAP_LOOKUP_ELEM => sys_bpf_map_lookup_elem(bpf_attr, size),
-                BPF_MAP_UPDATE_ELEM => sys_bpf_map_update_elem(bpf_attr, size),
-                BPF_MAP_DELETE_ELEM => sys_bpf_map_delete_elem(bpf_attr, size),
+                BPF_MAP_CREATE => sys_bpf_map_create(ptr, size),
+                BPF_MAP_LOOKUP_ELEM => sys_bpf_map_lookup_elem(ptr, size),
+                BPF_MAP_UPDATE_ELEM => sys_bpf_map_update_elem(ptr, size),
+                BPF_MAP_DELETE_ELEM => sys_bpf_map_delete_elem(ptr, size),
                 BPF_MAP_GET_NEXT_KEY => todo!(),
                 BPF_PROG_LOAD => todo!(),
-                BPF_PROG_ATTACH => sys_bpf_program_attach(bpf_attr, size),
+                BPF_PROG_ATTACH => sys_bpf_program_attach(ptr, size),
                 BPF_PROG_DETACH => todo!(),
-                BPF_PROG_LOAD_EX => self.sys_temp_bpf_program_load_ex(bpf_attr, size),
-            }
+                BPF_PROG_LOAD_EX => self.sys_temp_bpf_program_load_ex(ptr, size),
+            };
+            Ok(0)
         } else {
-            -1
+            Err(LxError::ENOSYS)
         }
     }
 

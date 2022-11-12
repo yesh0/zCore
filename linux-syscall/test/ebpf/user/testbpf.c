@@ -1,18 +1,16 @@
-#include <bpf.h>
-#include <file.h>
-#include <ulib.h>
-#include <stat.h>
+#include <linux/bpf.h>
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
 #include <syscall.h>
+#include <inttypes.h>
 
 #define MAX_ENTRIES 32
 
 void test_bpf_map() {
     int key;
     uint64_t value;
-
+    bpf();
     int fd = bpf_create_map(BPF_MAP_TYPE_ARRAY, sizeof(key), sizeof(value), MAX_ENTRIES);
     assert(fd > 0);
 

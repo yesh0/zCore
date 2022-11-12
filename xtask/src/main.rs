@@ -298,7 +298,6 @@ fn main() {
         LibcTest(arg) => arg.linux_rootfs().put_libc_test(),
         OtherTest(arg) => arg.linux_rootfs().put_other_test(),
         Image(arg) => arg.linux_rootfs().image(),
-
         Asm(args) => args.asm(),
         Bin(args) => {
             // 丢弃返回值
