@@ -81,16 +81,16 @@ fn bpf_helper_ktime_get_ns(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
 }
 
 // long bpf_trace_printk(const char *fmt, u32 fmt_size, ...)
-fn bpf_helper_trace_printk(fmt: u64, fmt_size: u64, _p1: u64, _p2: u64, _p3: u64) -> i64 {
+fn bpf_helper_trace_printk(fmt: u64, fmt_size: u64, p1: u64, p2: u64, p3: u64) -> i64 {
     // // TODO: check pointer
-    let _fmt = unsafe { core::slice::from_raw_parts(fmt as *const u8, fmt_size as u32 as usize) };
-    // info!(
-    //     "{}"//,
-    //     // dyn_fmt::Arguments::new(
-    //     //     unsafe { core::str::from_utf8_unchecked(fmt) },
-    //     //     &[p1, p2, p3]
-    //     // )
-    // );
+    let fmt = unsafe { core::slice::from_raw_parts(fmt as *const u8, fmt_size as u32 as usize) };
+    info!(
+        "{}",
+         dyn_fmt::Arguments::new(
+             unsafe { core::str::from_utf8_unchecked(fmt) },
+             &[p1, p2, p3]
+         )
+    );
      0 // TODO: return number of bytes written
 }
 

@@ -258,7 +258,7 @@ impl Syscall<'_> {
             #[cfg(not(target_arch = "aarch64"))]
             Sys::BLOCK_IN_KERNEL => self.sys_block_in_kernel(),
 
-            Sys::BPF => self.sys_bpf(a0 as i32, a1.into(), a2 as u32),
+            Sys::BPF => self.sys_bpf(a0 as i32, a1.into(), a2),
 
             #[cfg(target_arch = "x86_64")]
             _ => self.x86_64_syscall(sys_type, args).await,

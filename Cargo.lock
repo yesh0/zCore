@@ -624,6 +624,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9404d41caa1aa659f7be44d5a902e318c0672900822fe9ca41d9e38c14b52332"
 
 [[package]]
+name = "dyn-fmt"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2a0836c9bd73a9d3ca55b0effc5b1eedf96dd13ef994389bcac6d4d33c46188"
+
+[[package]]
 name = "ebpf2rv"
 version = "0.1.0"
 source = "git+https://github.com/latte-c/ebpf2rv?rev=50a7de5#50a7de5df0e0ef0de9e0cc9869ef0853f380e54f"
@@ -2698,6 +2704,7 @@ dependencies = [
  "bitflags",
  "cfg-if 1.0.0",
  "downcast-rs",
+ "dyn-fmt",
  "ebpf2rv",
  "futures",
  "hashbrown",

@@ -110,19 +110,24 @@ impl super::LinuxRootfs {
 
 
         // bpf kern
-        // let sh_dir = PROJECT_DIR.join("linux-syscall").join("ebpf").join("build.sh");
-        // use std::process::Command;
-        // let ebpf_test = Command::new("bash")
-        //     .arg(sh_dir.as_os_str())
-        //     .output()
-        //     .expect("failed to compile eBPF test!");
-        // if ebpf_test.status.code().unwrap() == -1 {
-        //     panic!("eBPF test: clang12 not found, exit!")
-        // }
+        println!("Compiling bpf kern progs!");
 
+        let sh_dir = PROJECT_DIR.join("linux-syscall").join("test").join("ebpf").join("build.sh");
+        use std::process::Command;
+        let ebpf_test = Command::new("bash")
+            .arg(sh_dir.as_os_str())
+            .output()
+            .expect("failed to compile eBPF test!");
+        if ebpf_test.status.code().unwrap() == -1 {
+            panic!("eBPF test: clang12 not found, exit!")
+        }
+        let mut output = &ebpf_test.stderr;
+        println!("{}", std::str::from_utf8(output).unwrap());
+        output = &ebpf_test.stdout;
+        println!("{}", std::str::from_utf8(output).unwrap());
         // bpf user 
 
-        println!("compiling ebpf user test!");
+        println!("Compiling ebpf user test!");
         let lib_path = PROJECT_DIR.join("linux-syscall").join("test").join("ebpf").join("user").join("bpf.c");
         
         // !fixme 
@@ -140,15 +145,21 @@ impl super::LinuxRootfs {
         .unwrap()
         .filter_map(|res| res.ok())
         .map(|entry| entry.path())
-        .filter(|path| path.file_name().map_or(false, |name| name == OsStr::new("naivetest.c")))
+        .filter(|path| path.file_stem().map_or(false, 
+            |name| name != OsStr::new("bpf")))
+        .filter(|path| path.extension().map_or(false, 
+                |name| name == OsStr::new("c")))
         .for_each(|c| {
-            println!("MUSL C {}", c.file_name().unwrap().to_str().unwrap());
+            let mut exe = c.file_stem().unwrap().to_os_string().clone();
+            exe.push(".exe");
+            println!("MUSL C {}", exe.as_os_str().to_str().unwrap());
             let mut prog = Ext::new(&musl_gcc);
                 prog
                 .arg(&c)
-                //.arg(&lib_path) // add bpf
+                .arg(&lib_path) // add bpf
                 .arg("-o")
-                .arg(bin.join(c.file_stem().unwrap()));
+                .arg(bin.join(exe))
+                .invoke();
         });
         
             

@@ -1,5 +1,6 @@
 
 #include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -8,12 +9,13 @@
 #include <inttypes.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <string.h>
 #include "bpf.h"
 
 int main() {
 
     struct stat stat;
-    int fd = open("./map.o", O_RDONLY);
+    int fd = open("./context.o", O_RDONLY);
     if (fd < 0) {
         printf("open kern prog failed!\n");
         return -1;
@@ -43,9 +45,17 @@ int main() {
     int bpf_fd = bpf_prog_load_ex(p, prog_size, map_array, 1);
     printf("load ex: %x\n", bpf_fd);
 
-    // const char *target = "kprobe:_RNvMNtNtCs6EJUG5qC0e6_5rcore7syscall4procNtB4_7Syscall8sys_fork";
-    //const char *target = "kprobe:<rcore::syscall::Syscall>::sys_fork";
-    //printf("attach: %d\n", bpf_prog_attach(target, bpf_fd));
+    //const char *target = "kprobe:_RNvMNtNtCs6EJUG5qC0e6_5rcore7syscall4procNtB4_7Syscall8sys_fork";
+    const char *target = "kprobe:<rcore::syscall::Syscall>::sys_fork";
+    uint32_t str_len = strlen(target);
+    printf("target: %s len: %d\n", target, str_len);
+    printf("attach: %d\n", bpf_prog_attach(target, str_len, bpf_fd));
 
     close(fd);
+
+    printf("busy loop");
+    while (1) {
+        sleep(1);
+    }
+    return 0;
 }

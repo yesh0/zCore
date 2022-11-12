@@ -25,7 +25,7 @@ use kernel_hal::user::{Out, UserInPtr, UserOutPtr, UserPtr};
 
 impl Syscall<'_> {
 
-    pub fn sys_bpf(&self, cmd: i32, bpf_attr: usize , size: u32) -> SysResult {
+    pub fn sys_bpf(&self, cmd: i32, bpf_attr: usize , size: usize) -> SysResult {
         error!("SYS_bpf cmd: {}, bpf_attr: {}, size: {}", cmd, bpf_attr, size);
         let ptr = bpf_attr as *const u8;
         if let Ok(bpf_cmd) = BpfCommand::try_from(cmd) {
@@ -48,7 +48,8 @@ impl Syscall<'_> {
     }
 
     #[allow(unused_mut)]
-    fn sys_temp_bpf_program_load_ex(&self, attr_ptr: *const u8, size: u32) -> i32 {
+    fn sys_temp_bpf_program_load_ex(&self, attr_ptr: *const u8, size: usize) -> i32 {
+        error!("load program ex");
         let ptr = UserInPtr::<ProgramLoadExAttr>::from(attr_ptr as usize);
         let attr = ptr.read().unwrap();
         // ELF relocatable object info

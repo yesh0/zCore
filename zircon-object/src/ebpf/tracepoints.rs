@@ -7,13 +7,14 @@ use trapframe::TrapFrame;
 
 use lock::Mutex;
 
-use crate::probe::{register_kprobe, register_kretprobe, KProbeArgs, KRetProbeArgs};
+use crate::{probe::{register_kprobe, register_kretprobe, KProbeArgs, KRetProbeArgs}, error};
 use super::{BpfObject::*, *, retcode::BpfErrorCode::{*, self}, retcode::*};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub struct AttachTarget {
+pub struct KprobeAttachAttr {
     pub target: *const u8,
+    pub str_len: u32,
     pub prog_fd: u32,
 }
 
@@ -122,6 +123,8 @@ fn parse_tracepoint<'a>(target: &'a str) -> Result<(TracepointType, &'a str), Bp
 
 pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
     // check program fd
+
+    error!("bpf prog attach");
     let program = {
         let objs = BPF_OBJECTS.lock();
         match objs.get(&prog_fd) {
@@ -134,6 +137,7 @@ pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
     let addr = resolve_symbol(fn_name).ok_or(ENOENT)?;
     let tracepoint = Tracepoint::new(tp_type, addr);
 
+    error!("symbol resolved, symbol:{} addr: {}", fn_name, addr);
     let mut map = ATTACHED_PROGS.lock();
     if let Some(programs) = map.get_mut(&tracepoint) {
         for other_prog in programs.iter() {
@@ -173,5 +177,6 @@ pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
             }
         }
     }
+    error!("OK");
     Ok(0)
 }

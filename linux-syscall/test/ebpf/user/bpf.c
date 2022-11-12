@@ -1,4 +1,5 @@
 #include "bpf.h"
+#include <stdint.h>
 #include <unistd.h>
 
 int sys_bpf(int cmd, union bpf_attr *attr, size_t size) {
@@ -68,11 +69,11 @@ bpf_prog_load_ex(void *prog, uint32_t prog_size, struct bpf_map_fd_entry *map_ar
     return sys_bpf(BPF_PROG_LOAD_EX, &attr, sizeof(attr));
 }
 
-int
-bpf_prog_attach(const char *target, int prog_fd) {
-    union bpf_attr attr = {
-        .target = target,
-        .prog_fd = prog_fd,
-    };
-    return sys_bpf(BPF_PROG_ATTACH, &attr, sizeof(attr));
+int bpf_prog_attach(const char *target, uint32_t str_len, int prog_fd) {
+  union bpf_attr attr = {
+      .target = target,
+      .str_len = str_len,
+      .prog_fd = prog_fd,
+  };
+  return sys_bpf(BPF_PROG_ATTACH, &attr, sizeof(attr));
 }
