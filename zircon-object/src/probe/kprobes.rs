@@ -165,3 +165,20 @@ pub fn unregister_kprobe(addr: usize) -> bool {
         false
     }
 }
+
+use crate::symbol::{symbol_to_addr};
+pub fn register_kprobe_with_symbol(symbol: &str, args: KProbeArgs) -> bool {
+    if let Some(addr) = symbol_to_addr(symbol) {
+        register_kprobe(addr, args)
+    } else {
+        false
+    }
+}
+
+pub fn unregister_kprobe_with_symbol(symbol: &str) -> bool {
+    if let Some(addr) = symbol_to_addr(symbol) {
+        unregister_kprobe(addr)
+    } else {
+        false
+    }
+}
