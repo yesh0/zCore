@@ -54,6 +54,7 @@ pub fn run_kprobes_tests() {
         post_handler: Some(Arc::new(test_post_handler)),
         user_data: 0,
     });
+    panic!("kprobes test finished");
 }
 
 global_asm!(include_str!("test.S"));
