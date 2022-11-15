@@ -111,22 +111,19 @@ fn bpf_helper_get_current_pid_tgid(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) 
     ((pid << 32) | pid) as i64
 }
 
-fn bpf_helper_get_current_comm(_dst: u64, _buf_size: u64, _1: u64, _2: u64, _3: u64) -> i64 {
-    // let thread = current_thread().unwrap();
-    // let exec_str = thread.proc.busy_lock().exec_path.clone();
-    // let exec_path = exec_str.as_bytes();
-    // let len = exec_path.len();
-    // if (buf_size as usize) < len + 1 {
-    //     return -1;
-    // }
-
-    // // NOTE: String is NOT null-terminated. we cannot copy len + 1 bytes directly.
-    // let dst_ptr = dst as *mut u8;
-    // unsafe {
-    //     let dst_slice = core::slice::from_raw_parts_mut(dst_ptr, len);
-    //     dst_slice.copy_from_slice(exec_path);
-    //     *dst_ptr.add(len) = 0;
-    // }
-    // len as i64
-    todo!();
+fn bpf_helper_get_current_comm(dst: u64, buf_size: u64, _1: u64, _2: u64, _3: u64) -> i64 {
+    let thread = os_current_thread();
+    let dst_ptr = dst as *mut u8;
+    let name = thread.get_name();
+    let name_ptr = name.as_bytes();
+    let len = name.len();
+    if len > buf_size as usize {
+        return -1;
+    }
+    unsafe {
+        let dst_slice = core::slice::from_raw_parts_mut(dst_ptr, len);
+        dst_slice.copy_from_slice(name_ptr);
+        *dst_ptr.add(len) = 0;
+    }
+    len as i64
 }

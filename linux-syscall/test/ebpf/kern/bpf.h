@@ -9,6 +9,7 @@ static void* (*bpf_map_lookup_elem)(int map_fd, const void *key) = (void*) 1;
 static int (*bpf_map_update_elem)(int map_fd, const void *key, const void *value, u64 flags) = (void*) 2;
 static u64 (*bpf_ktime_get_ns)() = (void*) 5;
 static int (*bpf_get_smp_processor_id)() = (void*) 8;
+static i64 (*bpf_get_current_pid_tgid)() = (void*) 14;
 static int (*bpf_get_current_comm)(char *buf, int max_size) = (void*) 16;
 
 #define bpf_trace_printk(fmt, p1, p2, p3) do { \

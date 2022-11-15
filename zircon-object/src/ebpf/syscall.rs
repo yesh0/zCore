@@ -31,7 +31,7 @@ impl ThreadLike for Thread {
         return self.related_koid() as u64;
     }
     fn get_name(&self) -> String {
-        todo!()
+        return String::from("not viable in zCore")
     }
 }
 
