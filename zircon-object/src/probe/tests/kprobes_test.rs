@@ -1,10 +1,10 @@
 // WARNING: riscv only!
-use super::kprobes::{register_kprobe};
+use super::kprobes::{register_kprobe, register_kprobe_with_symbol};
 use core::slice::from_raw_parts;
 use core::arch::global_asm;
 use alloc::sync::Arc;
 use super::{KProbeArgs, TrapFrame};
-use crate::symbol::{symbol_to_addr, symbol_table_with};
+use crate::symbol::{symbol_table_with};
 
 #[no_mangle]
 pub extern "C" fn kprobes_test_ok(i: usize) {
@@ -48,8 +48,8 @@ pub fn run_kprobes_tests() {
         }
     }
     info!("kprobes tests finished");
-    let call_addr = symbol_to_addr("linux_syscall::file::dir::<impl linux_syscall::Syscall>::sys_mkdirat").unwrap();
-    register_kprobe(call_addr, KProbeArgs {
+    register_kprobe_with_symbol("linux_syscall::file::dir::<impl linux_syscall::Syscall>::sys_mkdirat",
+     KProbeArgs {
         pre_handler: Arc::new(test_pre_handler),
         post_handler: Some(Arc::new(test_post_handler)),
         user_data: 0,
