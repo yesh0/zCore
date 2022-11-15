@@ -35,16 +35,17 @@ impl Syscall<'_> {
                 BPF_MAP_LOOKUP_ELEM => sys_bpf_map_lookup_elem(ptr, size),
                 BPF_MAP_UPDATE_ELEM => sys_bpf_map_update_elem(ptr, size),
                 BPF_MAP_DELETE_ELEM => sys_bpf_map_delete_elem(ptr, size),
-                BPF_MAP_GET_NEXT_KEY => todo!(),
+                BPF_MAP_GET_NEXT_KEY => sys_bpf_map_get_next_key(ptr, size),
                 BPF_PROG_LOAD => todo!(),
                 BPF_PROG_ATTACH => sys_bpf_program_attach(ptr, size),
                 BPF_PROG_DETACH => todo!(),
                 BPF_PROG_LOAD_EX => self.sys_temp_bpf_program_load_ex(ptr, size),
             };
             if ret < 0 {
-                panic!("negative return value!");
+               Err(LxError::ENOEXEC)
+            } else {
+                Ok(ret as usize)
             }
-            Ok(ret as usize)
         } else {
             Err(LxError::ENOSYS)
         }

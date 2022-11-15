@@ -4,7 +4,8 @@
 #include <unistd.h>
 
 int sys_bpf(int cmd, union bpf_attr *attr, size_t size) {
-    return syscall(SYS_bpf, cmd, attr, size);
+  printf("cmd = %d\n", cmd);
+  return syscall(SYS_bpf, cmd, attr, size);
 }
 
 

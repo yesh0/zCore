@@ -60,7 +60,8 @@ fn convert_result(result: BpfResult) -> i32 {
 }
 
 pub fn sys_bpf_map_create(attr: *const u8, size: usize) -> i32 {
-    assert_eq!(size as usize, size_of::<MapAttr>());
+   // assert_eq!(size as usize, size_of::<MapAttr>());
+    error!("sys_bpf_map_create");
     let map_attr = unsafe {
         *(attr as *const MapAttr)
     };
@@ -68,28 +69,34 @@ pub fn sys_bpf_map_create(attr: *const u8, size: usize) -> i32 {
 }
 
 pub fn sys_bpf_map_lookup_elem(attr: *const u8, size: usize) -> i32 {
-    assert_eq!(size as usize, size_of::<MapOpAttr>());
+   // assert_eq!(size as usize, size_of::<MapOpAttr>());
     let map_op_attr = unsafe {
         *(attr as *const MapOpAttr)
     };
-    convert_result(bpf_map_lookup_elem(map_op_attr))
+    convert_result(bpf_map_lookup_elem(map_op_attr.map_fd, map_op_attr.key as *const u8, map_op_attr.value_or_nextkey as *mut u8, map_op_attr.flags))
 }
 
 pub fn sys_bpf_map_update_elem(attr: *const u8, size: usize) -> i32 {
-    assert_eq!(size as usize, size_of::<MapOpAttr>());
+    //assert_eq!(size as usize, size_of::<MapOpAttr>());
     let map_op_attr = unsafe {
         *(attr as *const MapOpAttr)
     };
-    convert_result(bpf_map_update_elem(map_op_attr))
-
+    convert_result(bpf_map_update_elem(map_op_attr.map_fd, map_op_attr.key as *const u8, map_op_attr.value_or_nextkey as *mut u8, map_op_attr.flags))
 }
 
 pub fn sys_bpf_map_delete_elem(attr: *const u8, size: usize) -> i32 {
-    assert_eq!(size as usize, size_of::<MapOpAttr>());
+    //assert_eq!(size as usize, size_of::<MapOpAttr>());
     let map_op_attr = unsafe {
         *(attr as *const MapOpAttr)
     };
-    convert_result(bpf_map_delete_elem(map_op_attr))
+    convert_result(bpf_map_delete_elem(map_op_attr.map_fd, map_op_attr.key as *const u8, map_op_attr.value_or_nextkey as *mut u8, map_op_attr.flags))
+}
+
+pub fn sys_bpf_map_get_next_key(attr: *const u8, size: usize) -> i32 {
+    let map_op_attr = unsafe {
+        *(attr as *const MapOpAttr)
+    };
+    convert_result(bpf_map_get_next_key(map_op_attr.map_fd, map_op_attr.key as *const u8, map_op_attr.value_or_nextkey as *mut u8, map_op_attr.flags))
 }
 
 pub fn sys_bpf_program_attach(attr: *const u8, size: usize) -> i32 {
