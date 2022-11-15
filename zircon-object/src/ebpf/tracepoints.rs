@@ -123,7 +123,7 @@ fn parse_tracepoint<'a>(target: &'a str) -> Result<(TracepointType, &'a str), Bp
 pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
     // check program fd
 
-    error!("bpf prog attach target: {} \n fd:{}\n", target, prog_fd);
+    warn!("bpf prog attach target: {} \n fd:{}\n", target, prog_fd);
 
     let program = {
         let objs = BPF_OBJECTS.lock();
@@ -131,17 +131,17 @@ pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
         match objs.get(&prog_fd) {
             Some(bpf_obj) => {
                 let shared_program = bpf_obj.is_program().unwrap();
-                error!("found prog:!");
+                trace!("found prog:!");
                 Ok(shared_program.clone())
             },
             _ => Err(ENOENT),
         }
     }?;
-    error!("prog found!");
+    trace!("prog found!");
     let (tp_type, fn_name) = parse_tracepoint(target)?;
-    error!("tracepoint parsed: type={:?} fn={}", tp_type, fn_name);
+    info!("tracepoint parsed: type={:?} fn={}", tp_type, fn_name);
     let addr = resolve_symbol(fn_name).ok_or(ENOENT)?;
-    error!("symbol resolved, symbol:{} addr: {:x}", fn_name, addr);
+    warn!("trace point symbol resolved, symbol:{} addr: {:x}", fn_name, addr);
 
     let tracepoint = Tracepoint::new(tp_type, addr);
 
@@ -162,7 +162,7 @@ pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
                     user_data: addr,
                 };
                 let _ = register_kprobe(addr, args).ok_or(EINVAL)?;
-                error!("kprobe registered at addr: {:x}", addr);
+                warn!("kprobe registered at addr: {:x}", addr);
                 map.insert(tracepoint, vec![program]);
             }
             KRetProbeEntry | KRetProbeExit => {
@@ -185,6 +185,6 @@ pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
             }
         }
     }
-    error!("OK");
+    warn!("OK");
     Ok(0)
 }

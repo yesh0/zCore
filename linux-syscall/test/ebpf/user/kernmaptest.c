@@ -10,12 +10,26 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <assert.h>
 #include "bpf.h"
 
-int main() {
+#define MAX_ENTRIES 512
 
+int create_map() {
+    int fd = bpf_create_map(BPF_MAP_TYPE_ARRAY, sizeof(int), sizeof(int), MAX_ENTRIES);
+    assert(fd > 0);
+
+    int key = 0;
+    int value = 12345;
+    assert(bpf_update_elem(fd, &key, &value, 0) == 0);
+
+    return fd;
+}
+
+int main() {
+    int map_fd = create_map();
     struct stat stat;
-    int fd = open("./context.o", O_RDONLY);
+    int fd = open("./map.o", O_RDONLY);
     if (fd < 0) {
         printf("open kern prog failed!\n");
         return -1;
@@ -41,7 +55,8 @@ int main() {
     printf("ELF content: %x %x %x %x\n", p[0], p[1], p[2], p[3]);
 
     struct bpf_map_fd_entry map_array[] = {
-    }; // empty
+        { .name = "map_fd", .fd = map_fd },
+    };
     int bpf_fd = bpf_prog_load_ex(p, prog_size, map_array, 1);
     printf("load ex: %x\n", bpf_fd);
 

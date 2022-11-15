@@ -21,12 +21,23 @@ use zircon_object::vm::{
 use kernel_hal::user::{Out, UserInPtr, UserOutPtr, UserPtr};
 
 
-
+unsafe fn read_null_terminated_str(mut ptr: *const u8) -> String {
+    let mut ret = String::new();
+    loop {
+        let c = *ptr as char;
+        if c == '\n' || c == '\0' {
+            break;
+        }
+        ret.push(c);
+        ptr = ptr.add(1);
+    }
+    ret
+}
 
 impl Syscall<'_> {
 
     pub fn sys_bpf(&self, cmd: i32, bpf_attr: usize , size: usize) -> SysResult {
-        error!("SYS_bpf cmd: {}, bpf_attr: {}, size: {}", cmd, bpf_attr, size);
+        warn!("SYS_bpf cmd: {}, bpf_attr: {}, size: {}", cmd, bpf_attr, size);
         let ptr = bpf_attr as *const u8;
         if let Ok(bpf_cmd) = BpfCommand::try_from(cmd) {
             use BpfCommand::*;
@@ -53,7 +64,7 @@ impl Syscall<'_> {
 
     #[allow(unused_mut)]
     fn sys_temp_bpf_program_load_ex(&self, attr_ptr: *const u8, size: usize) -> i32 {
-        error!("load program ex");
+        trace!("load program ex");
         let ptr = UserInPtr::<ProgramLoadExAttr>::from(attr_ptr as usize);
         let attr = ptr.read().unwrap();
         // ELF relocatable object info
@@ -72,13 +83,19 @@ impl Syscall<'_> {
         actual_read = vm.read_memory(attr.map_array as usize, buf).unwrap();
         assert_eq!(actual_read, arr_len * core::mem::size_of::<MapFdEntry>());
 
+
         let mut map_info = alloc::vec::Vec::new();
+        let start = buf.as_ptr() as *const MapFdEntry;
         for i in 0..arr_len {
-            let entry = &map_fd_array[i];
-            let name = "";
-            //let name = check_and_clone_cstr(entry.name)?;
-            //map_info.push((name, entry.fd));
+            unsafe {
+                let entry = &(*start.add(i));
+                let name_ptr = entry.name;
+                let map_name = read_null_terminated_str(name_ptr);
+                info!("insert map: {} fd: {}", map_name, entry.fd);
+                map_info.push((map_name, entry.fd));            
+            }   
         }
+
         sys_bpf_program_load_ex(&mut prog[..], &map_info[..])
     }
 }

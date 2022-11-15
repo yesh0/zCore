@@ -8,6 +8,8 @@ use xmas_elf::symbol_table::Entry;
 #[cfg(target_arch = "riscv64")]
 use ebpf2rv::compile;
 
+use crate::error;
+
 use super::{
     *,
     consts::*,
@@ -56,7 +58,7 @@ impl BpfProgram {
 
 // #[cfg(target_arch = "riscv64")]
 pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfResult {
-    error!("bpf program load ex");
+    ("bpf program load ex");
     let _base = prog.as_ptr();
     let elf = xmas_elf::ElfFile::new(prog).map_err(|_| EINVAL)?;
     match elf.header.pt2.machine().as_machine() {
@@ -66,9 +68,13 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
 
     // build map fd table. storage must be fixed after this.
     let mut map_fd_table = Vec::with_capacity(map_info.len());
+    error!("addr {:x}, len {}", map_fd_table.as_ptr() as usize, map_info.len());
     for map_fd in map_info {
         map_fd_table.push(map_fd.1);
+        warn!("pushed fd: {}", map_fd.1);
     }
+
+    error!("map fd table built len: {}", map_fd_table.len());
 
     // build index -> map_fd variable address mapping
     let mut map_symbols = BTreeMap::new();
@@ -81,6 +87,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                         let base = map_fd_table.as_ptr() as usize;
                         let p = base + map_idx * core::mem::size_of::<u32>();
                         map_symbols.insert(sym_idx, p);
+                        error!("insert map sym, idx: {}, addr: {:x}", sym_idx, p);
                     }
                 }
             }
@@ -91,7 +98,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         return Err(ENOENT);
     }
 
-    error!("map resolution finished");
+    trace!("map resolution finished");
     // relocate maps
     for sec_hdr in elf.section_iter() {
         if let Ok(ShType::Rel) = sec_hdr.get_type() {
@@ -132,7 +139,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         }
     }
 
-    error!("relocation finished");
+    ("relocation finished");
     // compile eBPF code
     let sec_hdr = elf.find_section_by_name(".text").ok_or(ENOENT)?;
     let code = sec_hdr.raw_data(&elf);
@@ -147,7 +154,8 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         unsafe { core::mem::transmute::<&[BpfHelperFn], &[u64]>(&HELPER_FN_TABLE) };
     compile::compile(&mut jit_ctx, helper_fn_table, 512);
 
-    error!("compile finished");
+    ("compile finished");
+    error!("map fd table addr {:x}", map_fd_table.as_ptr() as usize);
 
     let compiled_code = jit_ctx.code; // partial move
     let program = BpfProgram {
@@ -155,9 +163,10 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         jited_prog: Some(compiled_code),
         map_fd_table: Some(map_fd_table),
     };
+
     let fd = bpf_allocate_fd();
     bpf_object_create_program(fd, program);
-    error!("OK fd: {}", fd);
+    warn!("OK fd: {}", fd);
     Ok(fd as usize)
 }
 

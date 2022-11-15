@@ -109,7 +109,7 @@ pub fn sys_bpf_program_attach(attr: *const u8, size: usize) -> i32 {
             core::slice::from_raw_parts(attach_attr.target, attach_attr.str_len as usize)
         ).unwrap()
     };
-    error!("target name str: {}", target_name);
+    trace!("target name str: {}", target_name);
     convert_result(bpf_program_attach(target_name, attach_attr.prog_fd))
 }
 
@@ -118,6 +118,6 @@ pub fn sys_bpf_program_attach(attr: *const u8, size: usize) -> i32 {
 pub fn sys_bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> i32 {
     //error!("loaded prog:\n{:?}", prog);  
     let ret = convert_result(bpf_program_load_ex(prog, &map_info));
-    error!("load ex ret: {}", ret);
+    trace!("load ex ret: {}", ret);
     ret
 }
