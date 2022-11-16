@@ -6,7 +6,7 @@ use xmas_elf::sections::*;
 use xmas_elf::symbol_table::Entry;
 
 #[cfg(target_arch = "riscv64")]
-use ebpf2rv::compile;
+use jit::compile;
 
 use crate::error;
 
@@ -86,7 +86,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
 
     // build map fd table. storage must be fixed after this.
 
-    let mut map_fd_table = Vec::with_capacity(map_info.len());
+    let mut map_fd_table = Vec::with_capacity(200);
     error!("addr {:x}, len {}", map_fd_table.as_ptr() as usize, map_info.len());
     for map_fd in map_info {
         map_fd_table.push(map_fd.1);

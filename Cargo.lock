@@ -2716,6 +2716,7 @@ dependencies = [
  "region-alloc",
  "riscv 0.8.0 (git+https://github.com/yesh0/riscv?rev=9eebb5c202b04832f01858536aeb8a1e3c5eccf6)",
  "riscv-decode",
+ "rvjit",
  "trapframe",
  "xmas-elf 0.7.0",
 ]
