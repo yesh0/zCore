@@ -267,7 +267,8 @@ impl Syscall<'_> {
             #[cfg(target_arch = "aarch64")]
             _ => self.aarch64_syscall(sys_type, args).await,
         };
-        if Sys::try_from(num).unwrap() == Sys::BPF  {
+        if Sys::try_from(num).unwrap() == Sys::BPF 
+        || Sys::try_from(num).unwrap() == Sys::CLOSE {
             error!("syscall result: {:?}", ret);
         }
         info!("<= {:?}", ret);

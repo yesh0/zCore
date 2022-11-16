@@ -66,12 +66,12 @@ int main() {
     uint32_t str_len = strlen(target);
     printf("target: %s len: %d\n", target, str_len);
     printf("attach: %d\n", bpf_prog_attach(target, str_len, bpf_fd));
-
+    printf("before close\n");
     close(fd);
-
-    printf("busy loop");
+    printf("after close\n");
+    printf("busy loop\n");
     while (1) {
-        printf("try open");
+        printf("try open\n");
         int fd = open("./context.o", O_RDONLY);
         sleep(1);
     }

@@ -63,9 +63,11 @@ impl Syscall<'_> {
 
     /// Closes a file descriptor, so that it no longer refers to any file and may be reused.
     pub fn sys_close(&self, fd: FileDesc) -> SysResult {
+        warn!("close: fd={:?}", fd);
         info!("close: fd={:?}", fd);
         let proc = self.linux_process();
         proc.close_file(fd)?;
+        warn!("close OK");
         Ok(0)
     }
 

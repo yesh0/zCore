@@ -37,16 +37,25 @@ pub struct ProgramLoadExAttr {
 pub struct BpfProgram {
     bpf_insns: Option<Vec<u64>>,
     jited_prog: Option<Vec<u32>>, // TODO: should be something like Vec<u8>
-    map_fd_table: Option<Vec<u32>>,
+    pub map_fd_table: Option<Vec<u32>>,
 }
 
 impl BpfProgram {
     // TODO: run with context
     pub fn run(&self, ctx: *const u8) -> i64 {
+        unsafe {
+            let ptr = 0xffffffc0804df568 as *const u32;
+            error!("try deref in here {}", *ptr);
+        }
         if let Some(compiled_code) = &self.jited_prog {
             let result = unsafe {
                 type JitedFn = unsafe fn(*const u8) -> i64;
                 let f = core::mem::transmute::<*const u32, JitedFn>(compiled_code.as_ptr());
+                error!("{:?}", compiled_code);
+                unsafe {
+                    let ptr = 0xffffffc0804df568 as *const u32;
+                    error!("try deref in here {}", *ptr);
+                }
                 f(ctx)
             };
             return result;
@@ -56,9 +65,18 @@ impl BpfProgram {
     }
 }
 
+// fn alloc_page() -> (Arc<VmObject>, usize) {
+//     let flags = MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE;
+//     let vmo = VmObject::new_paged(1);
+//     let pa = vmo.commit_page(0, flags).unwrap();
+//     let va = phys_to_virt(pa);
+//     trace!("alloc_page: va = {:#x}", va);
+//     (vmo, va)
+// }
+
 // #[cfg(target_arch = "riscv64")]
 pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfResult {
-    ("bpf program load ex");
+    warn!("bpf program load ex");
     let _base = prog.as_ptr();
     let elf = xmas_elf::ElfFile::new(prog).map_err(|_| EINVAL)?;
     match elf.header.pt2.machine().as_machine() {
@@ -67,6 +85,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
     }
 
     // build map fd table. storage must be fixed after this.
+
     let mut map_fd_table = Vec::with_capacity(map_info.len());
     error!("addr {:x}, len {}", map_fd_table.as_ptr() as usize, map_info.len());
     for map_fd in map_info {
@@ -119,10 +138,12 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                     } else {
                         continue;
                     }
+                    error!("relocate entry idx: {} offset:{:x} type:{:?} to addr:{:x}", sym_idx, offset, rel_type, relocated_addr);
 
                     match rel_type {
                         // relocation for LD_IMM64 instruction
                         R_BPF_64_64 => {
+                            warn!("rel type match load 64!");
                             let addr = relocated_addr as u64;
                             let (v1, v2) = (addr as u32, (addr >> 32) as u32);
                             let p1 = (base + offset + 4) as *mut u32;
@@ -131,7 +152,19 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                                 *p1 = v1;
                                 *p2 = v2;
                             }
-                        }
+                        },
+                        R_BPF_64_32 => {
+                            warn!("rel type match call");
+                            let addr = relocated_addr as u64;
+                            let v = addr / 8 - 1;
+                            let (v1, v2) = (v as u32, (v >> 32) as u32);
+                            let p1 = (base + offset + 4) as *mut u32;
+                            let p2 = (base + offset + 12) as *mut u32;
+                            unsafe {
+                                *p1 = v1;
+                                *p2 = v2;
+                            }
+                        },
                         _ => (),
                     }
                 }
@@ -156,8 +189,13 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
 
     ("compile finished");
     error!("map fd table addr {:x}", map_fd_table.as_ptr() as usize);
+    unsafe {
+        let ptr = map_fd_table.as_ptr();
+        error!("value {}", *(ptr as *const u32));
+    }
 
     let compiled_code = jit_ctx.code; // partial move
+
     let program = BpfProgram {
         bpf_insns: None, // currently we do not store original BPF instructions
         jited_prog: Some(compiled_code),
