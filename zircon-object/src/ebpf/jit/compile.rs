@@ -378,6 +378,7 @@ fn emit_instructions(ctx: &mut JitContext) {
         if is_load_imm64 {
             is_load_imm64 = false;
             let imm64 = (prev_imm as u32 as u64) | ((imm as u64) << 32);
+            warn!("emit imm64 {:x} from {:x} | {:x} ", imm64, imm, prev_imm);
             ctx.emit_load_imm64(prev_dst, imm64 as i64);
 
             continue;

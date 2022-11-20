@@ -5,7 +5,8 @@ typedef unsigned long long u64;
 
 static void (*bpf_print_str)(const char *s, int len) = (void*) 9;
 static int (*__bpf_trace_printk)(const char *fmt, int fmt_size, long p1, long p2, long p3) = (void*) 6;
-static void* (*bpf_map_lookup_elem)(int map_fd, const void *key) = (void*) 1;
+static int *(*bpf_map_lookup_elem)(int map_fd, const void *key,
+                                   void *value) = (void *)1;
 static int (*bpf_map_update_elem)(int map_fd, const void *key, const void *value, u64 flags) = (void*) 2;
 static u64 (*bpf_ktime_get_ns)() = (void*) 5;
 static int (*bpf_get_smp_processor_id)() = (void*) 8;

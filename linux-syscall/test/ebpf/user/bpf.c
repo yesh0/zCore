@@ -77,6 +77,5 @@ int bpf_prog_attach(const char *target, uint32_t str_len, int prog_fd) {
       .str_len = str_len,
       .prog_fd = prog_fd,
   };
-  printf("bpf prog attach size: %lld\n", sizeof(attr));
   return sys_bpf(BPF_PROG_ATTACH, &attr, sizeof(attr));
 }

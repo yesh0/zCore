@@ -71,15 +71,12 @@ impl KProbe {
 
 // returns whether this event is handled
 pub fn kprobe_trap_handler(tf: &mut TrapFrame) -> bool {
-    warn!("entered kprobe handler");
     let pc = get_trapframe_pc(tf);
     let mut map = KPROBES.lock();
     if let Some(probe) = map.get_mut(&pc) {
         // breakpoint hit for the first time
         probe.active_count += 1;
-        warn!("enter bpf prog");
         let _ = (probe.pre_handler)(tf, probe.user_data);
-        warn!("out of bpf prog");
         // emulate branch instructions
         if probe.emulate {
             emulate_execution(tf, probe.insn_buf.addr(), probe.addr);

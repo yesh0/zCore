@@ -33,11 +33,14 @@ impl ArrayMap {
 
 impl BpfMap for ArrayMap {
     fn lookup(&self, key: *const u8, value: *mut u8) -> BpfResult {
+        error!("lookup arrray key {:x} value {:x} ", key as usize, value as usize);
+        let u32k = key as *const u32;
+        let val = unsafe {*u32k};
         let index = unsafe { *(key as *const u32) } as usize;
         if index >= self.attr.max_entries {
             return Err(ENOENT);
         }
-
+        error!("get element addr {}", index);
         let p = self.get_element_addr(index);
         copy(value, p as *const u8, self.attr.value_size);
         Ok(0)

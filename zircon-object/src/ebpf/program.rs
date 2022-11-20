@@ -43,19 +43,10 @@ pub struct BpfProgram {
 impl BpfProgram {
     // TODO: run with context
     pub fn run(&self, ctx: *const u8) -> i64 {
-        unsafe {
-            let ptr = 0xffffffc0804df568 as *const u32;
-            error!("try deref in here {}", *ptr);
-        }
         if let Some(compiled_code) = &self.jited_prog {
             let result = unsafe {
                 type JitedFn = unsafe fn(*const u8) -> i64;
                 let f = core::mem::transmute::<*const u32, JitedFn>(compiled_code.as_ptr());
-                error!("{:?}", compiled_code);
-                unsafe {
-                    let ptr = 0xffffffc0804df568 as *const u32;
-                    error!("try deref in here {}", *ptr);
-                }
                 f(ctx)
             };
             return result;
@@ -87,7 +78,6 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
     // build map fd table. storage must be fixed after this.
 
     let mut map_fd_table = Vec::with_capacity(200);
-    error!("addr {:x}, len {}", map_fd_table.as_ptr() as usize, map_info.len());
     for map_fd in map_info {
         map_fd_table.push(map_fd.1);
         warn!("pushed fd: {}", map_fd.1);
@@ -106,7 +96,6 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                         let base = map_fd_table.as_ptr() as usize;
                         let p = base + map_idx * core::mem::size_of::<u32>();
                         map_symbols.insert(sym_idx, p);
-                        error!("insert map sym, idx: {}, addr: {:x}", sym_idx, p);
                     }
                 }
             }
@@ -154,16 +143,16 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                             }
                         },
                         R_BPF_64_32 => {
-                            warn!("rel type match call");
-                            let addr = relocated_addr as u64;
-                            let v = addr / 8 - 1;
-                            let (v1, v2) = (v as u32, (v >> 32) as u32);
-                            let p1 = (base + offset + 4) as *mut u32;
-                            let p2 = (base + offset + 12) as *mut u32;
-                            unsafe {
-                                *p1 = v1;
-                                *p2 = v2;
-                            }
+                            warn!("rel type R_BPF_64_32 but we do nothing");
+                            // let addr = relocated_addr as u64;
+                            // let v = addr / 8 - 1;
+                            // let (v1, v2) = (v as u32, (v >> 32) as u32);
+                            // let p1 = (base + offset + 4) as *mut u32;
+                            // let p2 = (base + offset + 12) as *mut u32;
+                            // unsafe {
+                            //     *p1 = v1;
+                            //     *p2 = v2;
+                            // }
                         },
                         _ => (),
                     }
@@ -172,7 +161,6 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         }
     }
 
-    ("relocation finished");
     // compile eBPF code
     let sec_hdr = elf.find_section_by_name(".text").ok_or(ENOENT)?;
     let code = sec_hdr.raw_data(&elf);
@@ -187,12 +175,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         unsafe { core::mem::transmute::<&[BpfHelperFn], &[u64]>(&HELPER_FN_TABLE) };
     compile::compile(&mut jit_ctx, helper_fn_table, 512);
 
-    ("compile finished");
     error!("map fd table addr {:x}", map_fd_table.as_ptr() as usize);
-    unsafe {
-        let ptr = map_fd_table.as_ptr();
-        error!("value {}", *(ptr as *const u32));
-    }
 
     let compiled_code = jit_ctx.code; // partial move
 
