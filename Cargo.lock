@@ -632,7 +632,7 @@ checksum = "c2a0836c9bd73a9d3ca55b0effc5b1eedf96dd13ef994389bcac6d4d33c46188"
 [[package]]
 name = "ebpf2rv"
 version = "0.1.0"
-source = "git+https://github.com/latte-c/ebpf2rv?rev=50a7de5#50a7de5df0e0ef0de9e0cc9869ef0853f380e54f"
+source = "git+https://github.com/livingshade/ebpf2rv?rev=ecfc526#ecfc526347994298582b464abe17d1f1b472013b"
 dependencies = [
  "rvjit",
 ]
@@ -2716,7 +2716,6 @@ dependencies = [
  "region-alloc",
  "riscv 0.8.0 (git+https://github.com/yesh0/riscv?rev=9eebb5c202b04832f01858536aeb8a1e3c5eccf6)",
  "riscv-decode",
- "rvjit",
  "trapframe",
  "xmas-elf 0.7.0",
 ]
