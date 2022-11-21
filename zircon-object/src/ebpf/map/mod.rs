@@ -34,7 +34,7 @@ pub struct MapOpAttr {
     pub value_or_nextkey: u64,
     pub flags: u64,
 }
-#[derive(Debug, Clone, Copy)]
+
 pub enum BpfMapOp {
     LookUp,
     Update,
@@ -82,7 +82,6 @@ pub fn bpf_map_get_attr(fd: u32) -> Option<InternalMapAttr> {
 
 #[allow(unreachable_patterns)]
 pub fn bpf_map_ops(fd: u32, op: BpfMapOp, key: *const u8, value: *mut u8, flags: u64) -> BpfResult {
-    warn!("bpf ops fd:{} op:{:?} key:{:x} value:{:x}", fd, op, key as usize, value as usize);
     let bpf_objs = BPF_OBJECTS.lock();
     let obj = bpf_objs.get(&fd).ok_or(ENOENT)?;
     let shared_map = obj.is_map().ok_or(ENOENT)?;
@@ -97,7 +96,7 @@ pub fn bpf_map_ops(fd: u32, op: BpfMapOp, key: *const u8, value: *mut u8, flags:
 }
 
 pub fn bpf_map_lookup_elem(fd: u32, key: *const u8, value: *mut u8, flags: u64) -> BpfResult {
-    bpf_map_ops(fd, BpfMapOp::LookUp, key, value, flags)
+    bpf_map_ops(fd, BpfMapOp::LookUp, key, value, flags)   
 }
 
 pub fn bpf_map_update_elem(fd: u32, key: *const u8, value: *mut u8, flags: u64) -> BpfResult {

@@ -47,4 +47,5 @@ async-std = { version = "1.10", features = ["attributes", "unstable"] }
 [target.'cfg(any(target_arch = "riscv32", target_arch = "riscv64"))'.dependencies]
 riscv-decode = { git = "https://github.com/latte-c/riscv-decode", rev = "bc8da4e" }
 riscv = { git = "https://github.com/yesh0/riscv", rev = "9eebb5c202b04832f01858536aeb8a1e3c5eccf6" }
-ebpf2rv = { git = "https://github.com/livingshade/ebpf2rv", rev = "ecfc526" }
+ebpf2rv = { git = "https://github.com/latte-c/ebpf2rv", rev = "50a7de5" }
+rvjit = { git = "https://github.com/latte-c/rvjit", rev = "58e145d" }

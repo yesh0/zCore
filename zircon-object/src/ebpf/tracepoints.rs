@@ -79,7 +79,24 @@ impl KProbeBPFContext {
 fn kprobe_handler(tf: &mut TrapFrame, probed_addr: usize) -> isize {
     let tracepoint = Tracepoint::new(KProbe, probed_addr);
     let ctx = KProbeBPFContext::new(tf, probed_addr, 0);
+    warn!("run attached progs!");
+    let obj = BPF_OBJECTS.lock();
+    let fd = 1879048193 as u32;
+    let temp = obj.get(&fd).unwrap();
+    if let Some(prog) = temp.is_program() {
+        let t = &prog.map_fd_table;
+        if let Some(vec) = t {
+            error!("get vec {:?} addr: {:x}", vec, vec.as_ptr() as usize);
+
+        }
+    }
+    error!("");
+    unsafe {
+        let ptr = 0xffffffc0804df568 as *const u32;
+        error!("try deref in here {}", *ptr);
+    }
     run_attached_programs(&tracepoint, ctx.as_ptr());
+    warn!("run attached progs exit!");
 
     0
 }
