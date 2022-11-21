@@ -6,7 +6,7 @@ use xmas_elf::sections::*;
 use xmas_elf::symbol_table::Entry;
 
 #[cfg(target_arch = "riscv64")]
-use jit::compile;
+use ebpf2rv::compile;
 
 use crate::error;
 
