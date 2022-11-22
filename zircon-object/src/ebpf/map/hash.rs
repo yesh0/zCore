@@ -2,12 +2,11 @@ use super::{
     BpfResult,
     consts::*,
     retcode::BpfErrorCode::*,
+    osutil::{memcmp, copy},
 };
 use super::internal::{
     InternalMapAttr,
     BpfMap,
-    copy,
-    memcmp,
 };
 
 use alloc::{boxed::Box,

@@ -2,7 +2,7 @@ use alloc::string::ToString;
 
 use super::{
     retcode::*,
-    syscall::*, map::{bpf_map_lookup_elem, bpf_map_update_elem, bpf_map_delete_elem},
+    osutil::*, map::{bpf_map_lookup_elem, bpf_map_update_elem, bpf_map_delete_elem},
 };
 
 pub type BpfHelperFn = fn(u64, u64, u64, u64, u64) -> i64;

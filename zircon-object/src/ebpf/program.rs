@@ -52,10 +52,6 @@ impl BpfProgram {
                 type JitedFn = unsafe fn(*const u8) -> i64;
                 let f = core::mem::transmute::<*const u32, JitedFn>(compiled_code.as_ptr());
                 error!("{:?}", compiled_code);
-                unsafe {
-                    let ptr = 0xffffffc0804df568 as *const u32;
-                    error!("try deref in here {}", *ptr);
-                }
                 f(ctx)
             };
             return result;
@@ -64,15 +60,6 @@ impl BpfProgram {
         todo!("eBPF interpreter missing")
     }
 }
-
-// fn alloc_page() -> (Arc<VmObject>, usize) {
-//     let flags = MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE;
-//     let vmo = VmObject::new_paged(1);
-//     let pa = vmo.commit_page(0, flags).unwrap();
-//     let va = phys_to_virt(pa);
-//     trace!("alloc_page: va = {:#x}", va);
-//     (vmo, va)
-// }
 
 // #[cfg(target_arch = "riscv64")]
 pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfResult {
@@ -172,7 +159,6 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         }
     }
 
-    ("relocation finished");
     // compile eBPF code
     let sec_hdr = elf.find_section_by_name(".text").ok_or(ENOENT)?;
     let code = sec_hdr.raw_data(&elf);

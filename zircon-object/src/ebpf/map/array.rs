@@ -1,11 +1,11 @@
 use super::{
     BpfResult,
     retcode::BpfErrorCode::*,
+    osutil::{memcmp, copy},
 };
 use super::internal::{
     InternalMapAttr,
     BpfMap,
-    copy,
 };
 
 
