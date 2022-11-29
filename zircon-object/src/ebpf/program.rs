@@ -43,15 +43,10 @@ pub struct BpfProgram {
 impl BpfProgram {
     // TODO: run with context
     pub fn run(&self, ctx: *const u8) -> i64 {
-        unsafe {
-            let ptr = 0xffffffc0804df568 as *const u32;
-            error!("try deref in here {}", *ptr);
-        }
         if let Some(compiled_code) = &self.jited_prog {
             let result = unsafe {
                 type JitedFn = unsafe fn(*const u8) -> i64;
                 let f = core::mem::transmute::<*const u32, JitedFn>(compiled_code.as_ptr());
-                error!("{:?}", compiled_code);
                 f(ctx)
             };
             return result;
@@ -173,12 +168,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         unsafe { core::mem::transmute::<&[BpfHelperFn], &[u64]>(&HELPER_FN_TABLE) };
     compile::compile(&mut jit_ctx, helper_fn_table, 512);
 
-    ("compile finished");
     error!("map fd table addr {:x}", map_fd_table.as_ptr() as usize);
-    unsafe {
-        let ptr = map_fd_table.as_ptr();
-        error!("value {}", *(ptr as *const u32));
-    }
 
     let compiled_code = jit_ctx.code; // partial move
 
