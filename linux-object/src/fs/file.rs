@@ -115,6 +115,7 @@ impl_kobject!(File);
 impl FileInner {
     /// read from file
     async fn read(&mut self, buf: &mut [u8]) -> LxResult<usize> {
+        crate::dbginfo::print_stacktrace();
         let len = self.read_at(self.offset, buf).await?;
         self.offset += len as u64;
         Ok(len)
