@@ -37,7 +37,7 @@ impl BpfMap for ArrayMap {
         if index >= self.attr.max_entries {
             return Err(ENOENT);
         }
-        warn!("get element addr {}", index);
+        warn!("get element addr index: {}", index);
         let p = self.get_element_addr(index);
         copy(value, p as *const u8, self.attr.value_size);
         Ok(0)

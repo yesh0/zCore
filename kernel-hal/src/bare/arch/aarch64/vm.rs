@@ -47,7 +47,7 @@ fn init_kernel_page_table() -> PagingResult<PageTable> {
     map_range(
         sdata as usize,
         edata as usize,
-        MMUFlags::READ | MMUFlags::WRITE,
+        MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE,
     )?;
     map_range(
         sbss as usize,
@@ -58,7 +58,7 @@ fn init_kernel_page_table() -> PagingResult<PageTable> {
     map_range(
         boot_stack as usize,
         boot_stack_top as usize,
-        MMUFlags::READ | MMUFlags::WRITE,
+        MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE,
     )?;
     // uart
     map_range(

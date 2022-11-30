@@ -83,11 +83,9 @@ pub fn bpf_map_get_attr(fd: u32) -> Option<InternalMapAttr> {
 
 #[allow(unreachable_patterns)]
 pub fn bpf_map_ops(fd: u32, op: BpfMapOp, key: *const u8, value: *mut u8, flags: u64) -> BpfResult {
-    error!("bpf map ops fd:{}, op:{:?}", fd, op);
+    error!("bpf map ops fd:{}, op:{:?} key:{} value:{}", fd, op, key as usize, value as usize);
     let bpf_objs = BPF_OBJECTS.lock();
-    error!("lock obj");
     let obj = bpf_objs.get(&fd).ok_or(ENOENT)?;
-    error!("get by fd");
     let shared_map = obj.is_map().ok_or(ENOENT)?;
     let mut map = shared_map.lock();
     error!("matchop");
