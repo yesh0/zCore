@@ -32,7 +32,6 @@ pub static HELPER_FN_TABLE: [BpfHelperFn; HELPER_FN_COUNT] = [
 // in syscall contexts. obtaining current process information may cause deadlock!
 
 fn bpf_helper_map_lookup_elem(fd: u64, key: u64, value: u64, _4: u64, _5: u64) -> i64 {
-    warn!("bpf helper lookup elem called!");
     match bpf_map_lookup_elem(fd as u32, key as *const u8, value as *mut u8, 0) {
         Ok(val) => val as i64,
         Err(_) => -1
@@ -95,7 +94,6 @@ fn bpf_helper_ktime_get_ns(_1: u64, _2: u64, _3: u64, _4: u64, _5: u64) -> i64 {
 // long bpf_trace_printk(const char *fmt, u32 fmt_size, ...)
 fn bpf_helper_trace_printk(fmt: u64, fmt_size: u64, p1: u64, p2: u64, p3: u64) -> i64 {
     // // TODO: check pointer
-    warn!("bpf helper printk");
     let fmt = unsafe { core::slice::from_raw_parts(fmt as *const u8, fmt_size as u32 as usize) };
     
     let output = dyn_fmt::Arguments::new(
