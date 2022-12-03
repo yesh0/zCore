@@ -35,6 +35,7 @@ pub struct MapOpAttr {
     pub flags: u64,
 }
 
+#[derive(Debug)]
 pub enum BpfMapOp {
     LookUp,
     Update,

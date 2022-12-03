@@ -9,7 +9,7 @@ pub mod map;
 pub mod program;
 pub mod tracepoints;
 pub mod retcode;
-pub mod syscall;
+pub mod osutil;
 
 use lock::Mutex;
 use alloc::collections::BTreeMap;

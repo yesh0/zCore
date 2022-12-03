@@ -16,6 +16,7 @@ use crate::ebpf::program::bpf_program_load_ex;
 use crate::object::{task::Thread, KernelObject};
 use alloc::sync::Arc;
 use alloc::string::String;
+use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 pub trait ThreadLike : Sync + Send {
     fn get_pid(&self) -> u64;
@@ -50,6 +51,25 @@ pub fn os_current_time() -> u128 {
 
 pub fn os_get_current_cpu() -> u8 {
     kernel_hal::cpu::cpu_id()
+}
+
+pub fn os_copy_from_user(usr_addr: usize, kern_buf: *mut u8, len: usize) -> i32 {
+    let usr_ptr = usr_addr as *const u8;
+    copy(kern_buf, usr_ptr, len);
+    0
+}
+ 
+
+pub fn copy(dst: *mut u8, src: *const u8, len: usize) {
+    let from = unsafe { from_raw_parts(src, len) };
+    let to = unsafe { from_raw_parts_mut(dst, len) };
+    to.copy_from_slice(from);
+}
+
+pub fn memcmp(u: *const u8, v: *const u8, len: usize) -> bool {
+    return unsafe {
+        from_raw_parts(u, len) == from_raw_parts(v, len)
+    }
 }
 
 fn convert_result(result: BpfResult) -> i32 {

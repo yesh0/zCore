@@ -130,13 +130,10 @@ impl super::LinuxRootfs {
         println!("Compiling ebpf user test!");
         let lib_path = PROJECT_DIR.join("linux-syscall").join("test").join("ebpf").join("user").join("bpf.c");
         
-        // !fixme 
-        // very strange indeed!
-        // i cannot use the musl before
-        // i don't know why
-
-        let mut musl_gcc = PathBuf::new();
-        musl_gcc.push("/home/s2020012692/env/riscv64-linux-musl-cross/bin/riscv64-linux-musl-gcc");
+        let musl_gcc = self.0
+                        .linux_musl_cross()
+                        .join("bin")
+                        .join(format!("{}-linux-musl-gcc", self.0.name()));
 
 
         println!("lib path: {}", lib_path.as_os_str().to_str().unwrap());

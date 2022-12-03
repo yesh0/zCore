@@ -13,7 +13,7 @@ use zircon_object::ebpf::program::MapFdEntry;
 use zircon_object::ebpf::{
     consts::BpfCommand,
     program::ProgramLoadExAttr,
-    syscall::*,
+    osutil::*,
 };
 use zircon_object::vm::{
     VmObject

@@ -7,7 +7,7 @@ use super::{
 
 use core::{slice};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
-
+use super::osutil::{copy, memcmp};
 
 #[derive(Debug, Clone, Copy)]
 pub struct InternalMapAttr {
@@ -38,15 +38,5 @@ pub trait BpfMap {
 }
 
 
-pub fn copy(dst: *mut u8, src: *const u8, len: usize) {
-    let from = unsafe { from_raw_parts(src, len) };
-    let to = unsafe { from_raw_parts_mut(dst, len) };
-    to.copy_from_slice(from);
-}
 
-pub fn memcmp(u: *const u8, v: *const u8, len: usize) -> bool {
-    return unsafe {
-        slice::from_raw_parts(u, len) == slice::from_raw_parts(v, len)
-    }
-}
 
