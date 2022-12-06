@@ -5,7 +5,7 @@ use alloc::borrow;
 use gimli;
 use super::address::print_from_addr;
 
-pub fn parse_elf_and_print(data: Vec<u8>, probe: usize) -> Result<(), gimli::Error> {
+pub fn parse_elf_and_print(data: Vec<u8>, probes: Vec<usize>) -> Result<(), gimli::Error> {
     let elf = ElfFile::new(&data).unwrap();
     let load_section = |id: gimli::SectionId| -> Result<borrow::Cow<[u8]>, gimli::Error> {
         match elf.find_section_by_name(id.name()) {
@@ -28,6 +28,8 @@ pub fn parse_elf_and_print(data: Vec<u8>, probe: usize) -> Result<(), gimli::Err
     let dwarf = dwarf_cow.borrow(&borrow_section);
 
     let ctx = Context::from_dwarf(dwarf).unwrap();
-    print_from_addr(probe, &ctx);
+    for probe in probes {
+        print_from_addr(probe, &ctx);
+    }
     Ok(())
 }

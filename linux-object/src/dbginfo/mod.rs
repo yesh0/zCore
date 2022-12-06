@@ -2,6 +2,7 @@ use crate::fs::INodeExt;
 use alloc::sync::Arc;
 use crate::fs::vfs::FileSystem;
 use lock::Mutex;
+use alloc::vec::Vec;
 mod parse;
 mod address;
 mod stacktrace;
@@ -20,9 +21,15 @@ pub fn init_debuginfo(rootfs: &Arc<dyn FileSystem>) {
     }
 }
 
-pub fn addr_to_line(probe: usize) {
-    let inode = ROOTFS.lock().as_ref().unwrap()
-                 .root_inode().lookup("./zcore").unwrap();
+pub fn print_trace(probe: Vec<usize>) {
+    let inode = match ROOTFS.lock().as_ref().unwrap()
+    .root_inode().lookup("./zcore") {
+        Ok(inode) => inode,
+        Err(e) => {
+            error!("failed to lookup /zcore: {:?}, debuginfo can't be used", e);
+            return;
+        }
+    };
     let data = inode.read_as_vec().unwrap();
     parse::parse_elf_and_print(data, probe).unwrap();
 }

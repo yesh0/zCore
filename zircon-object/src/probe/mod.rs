@@ -89,3 +89,7 @@ pub fn run_tests() {
     tests::trace_test::run_dynamic_trace_test();
     info!("kprobe tests passed");
 }
+
+pub fn panic_test() {
+    panic!("panic test");
+}

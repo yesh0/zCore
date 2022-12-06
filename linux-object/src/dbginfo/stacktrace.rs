@@ -1,5 +1,5 @@
-use core::mem::size_of;
 use core::arch::asm;
+use core::mem::size_of;
 
 extern "C" {
     fn stext();
@@ -34,7 +34,7 @@ pub fn print_stacktrace() {
     unsafe {
         let mut current_pc = lr();
         let mut current_fp = fp();
-        let mut stack_num = 0;
+        let mut trace_pc = vec!();
         warn!("=== BEGIN zCore stack trace ===");
 
         while current_pc >= stext as usize
@@ -42,9 +42,7 @@ pub fn print_stacktrace() {
             && current_fp as usize != 0
         {
 
-            super::addr_to_line(current_pc - size_of::<usize>());
-
-            stack_num = stack_num + 1;
+            trace_pc.push(current_pc - size_of::<usize>());
             #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))]
             {
                 current_fp = *(current_fp as *const usize).offset(-2);
@@ -55,6 +53,7 @@ pub fn print_stacktrace() {
                 current_pc = *(current_fp as *const usize).offset(-1);
             }
         }
+        super::print_trace(trace_pc);
         warn!("=== END zCore stack trace ===");
     }
 }
