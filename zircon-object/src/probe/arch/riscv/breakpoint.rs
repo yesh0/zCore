@@ -2,16 +2,15 @@ use lock::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::collections::btree_set::BTreeSet;
 use lazy_static::*;
-use alloc::sync::Arc;
-use crate::vm::{VmObject};
 
-use crate::vm::{PAGE_SIZE};
 use super::{byte_copy, alloc_page};
+pub use super::osutils::*;
 
 const BREAKPOINT_LENGTH: usize = 2;
 const BREAKPOINTS_PER_PAGE: usize = PAGE_SIZE / BREAKPOINT_LENGTH;
 const C_EBREAK: u16 = 0x9002;
 
+/// Inject breakpoints into the given address range
 pub fn inject_breakpoints(addr: usize, length: Option<usize>) {
     let ebreak = C_EBREAK; // C.EBREAK
     let bp_len = BREAKPOINT_LENGTH;
@@ -29,7 +28,6 @@ pub fn inject_breakpoints(addr: usize, length: Option<usize>) {
 }
 
 struct BreakpointPage {
-    _vmo: Arc<VmObject>,
     pub nr_free: usize,
 }
 
@@ -39,6 +37,7 @@ lazy_static! {
         Mutex::new(BTreeMap::new());
 }
 
+/// allocate a ebreak breakpoint not occupied by other kretprobes
 pub fn alloc_breakpoint() -> usize {
     let mut free_bps = FREE_BREAKPOINTS.lock();
     if free_bps.len() != 0 {
@@ -49,14 +48,14 @@ pub fn alloc_breakpoint() -> usize {
         page.nr_free -= 1;
         return addr;
     } else {
-        let (vmo, base) = alloc_page();
+        // new page of breakpoints
+        let base = alloc_page();
         inject_breakpoints(base, Some(PAGE_SIZE));
         for i in 1..BREAKPOINTS_PER_PAGE {
             free_bps.insert(base + i * BREAKPOINT_LENGTH);
         }
 
         let page = BreakpointPage {
-            _vmo: vmo,
             nr_free: BREAKPOINTS_PER_PAGE - 1,
         };
         BREAKPOINT_PAGES.lock().insert(base, page);
@@ -64,6 +63,7 @@ pub fn alloc_breakpoint() -> usize {
     }
 }
 
+/// free a breakpoint from kretprobe
 pub fn free_breakpoint(addr: usize) {
     let mut free_bps = FREE_BREAKPOINTS.lock();
     free_bps.insert(addr);

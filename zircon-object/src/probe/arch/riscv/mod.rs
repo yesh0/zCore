@@ -2,49 +2,30 @@ use core::arch::{asm};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 use riscv_decode::{CompressedInstruction::*, Instruction::*, *};
 use trapframe::TrapFrame;
-use alloc::sync::Arc;
-
 use super::kprobes::SingleStepType::{self, *};
-use crate::vm::{VmObject, MMUFlags};
 
 mod breakpoint;
 pub use breakpoint::*;
-use kernel_hal::mem::{virt_to_phys, phys_to_virt, pmem_copy};
 
-// TODO: actually modify page table
-fn alloc_page() -> (Arc<VmObject>, usize) {
-    let flags = MMUFlags::READ | MMUFlags::WRITE | MMUFlags::EXECUTE;
-    let vmo = VmObject::new_paged(1);
-    let pa = vmo.commit_page(0, flags).unwrap();
-    let va = phys_to_virt(pa);
-    trace!("alloc_page: va = {:#x}", va);
-    (vmo, va)
-}
+pub use super::osutils;
+use osutils::*;
 
 // use frame allocator so that it's easier to handle access permissions (execute)
 // and there's no need to worry about alignment
-fn alloc_insn_buffer() -> (Arc<VmObject>, usize) {
+fn alloc_insn_buffer() -> usize {
     // can save memory by not using a whole page
     alloc_page()
 }
 
-pub fn byte_copy(dst_addr: usize, src_addr: usize, len: usize) {
-    trace!("byte_copy: src = {:#x}, dst = {:#x}, len = {:#x}", src_addr, dst_addr, len);
-    pmem_copy(virt_to_phys(dst_addr),
-                virt_to_phys(src_addr),
-                len);
-}
-
+/// save the instruction replaced by ebreak for direct execution
 pub struct InstructionBuffer {
-    _vmo: Arc<VmObject>,
     addr: usize,
 }
 
 impl InstructionBuffer {
     pub fn new() -> Self {
-        let (_vmo, addr) = alloc_insn_buffer();
+        let addr = alloc_insn_buffer();
         Self {
-            _vmo,
             addr,
         }
     }
@@ -68,7 +49,7 @@ impl InstructionBuffer {
 
 impl Drop for InstructionBuffer {
     fn drop(&mut self) {
-        // vmo gets dropped, is it ok to do nothing?
+        dealloc_page(self.addr);
     }
 }
 

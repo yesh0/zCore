@@ -117,7 +117,6 @@ impl FileInner {
     async fn read(&mut self, buf: &mut [u8]) -> LxResult<usize> {
         let len = self.read_at(self.offset, buf).await?;
         self.offset += len as u64;
-        zircon_object::probe::panic_test();
         Ok(len)
     }
 

@@ -120,7 +120,7 @@ impl BuildConfig {
             println!("set build env: {key:?} : {val:?}");
             cargo.env(key, val);
         }
-        println!("hard set RUSTFLAGS to include -C force-frame-pointers=yes for backtrace!");
+        println!("set RUSTFLAGS to include -C force-frame-pointers=yes for backtrace!");
         cargo.env("RUSTFLAGS", "-C force-frame-pointers=yes -C symbol-mangling-version=v0");
         cargo.invoke();
     }
