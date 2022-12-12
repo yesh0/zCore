@@ -134,6 +134,7 @@ impl BuildConfig {
         // nm获取符号表并将符号表写入elf，全部在python中完成
         let fill = PROJECT_DIR.join("tools").join("fill").join("fill.py");
         use std::process::Command;
+        println!("Dumping symbol table");
         let fill_out = Command::new("python3")
             .arg(fill.as_os_str())
             .arg(obj.as_os_str())

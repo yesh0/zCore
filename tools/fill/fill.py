@@ -19,7 +19,7 @@ if __name__ == "__main__":
     tmp_path = os.path.join(args.path, "kernel.tmp")
     
     if not os.path.exists(args.path):
-        os.mkdir(args.path)
+        os.makedirs(args.path)
 
     symbols = subprocess.check_output([
         CMD_NM, '-C', '-n',
