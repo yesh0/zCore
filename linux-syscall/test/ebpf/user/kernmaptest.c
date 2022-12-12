@@ -62,7 +62,7 @@ int main() {
 
     //const char *target = "kprobe:_RNvMNtNtCs6EJUG5qC0e6_5rcore7syscall4procNtB4_7Syscall8sys_fork";
 
-    const char *target = "kprobe$linux_syscall::file::fd::<impl linux_syscall::Syscall>::sys_openat";
+    const char *target = "kprobe$<linux_syscall::Syscall>::sys_openat";
     uint32_t str_len = strlen(target);
     printf("target: %s len: %d\n", target, str_len);
     printf("attach: %d\n", bpf_prog_attach(target, str_len, bpf_fd));

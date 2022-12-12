@@ -48,7 +48,7 @@ pub fn run_kprobes_tests() {
         }
     }
     info!("kprobes tests finished");
-    register_kprobe_with_symbol("linux_syscall::file::dir::<impl linux_syscall::Syscall>::sys_mkdirat",
+    register_kprobe_with_symbol("<linux_syscall::Syscall>::sys_mkdirat",
      KProbeArgs {
         pre_handler: Arc::new(test_pre_handler),
         post_handler: Some(Arc::new(test_post_handler)),

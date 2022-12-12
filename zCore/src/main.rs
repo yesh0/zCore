@@ -54,12 +54,12 @@ fn primary_main(config: kernel_hal::KernelConfig) {
         if #[cfg(all(feature = "linux", feature = "zircon"))] {
             panic!("Feature `linux` and `zircon` cannot be enabled at the same time!");
         } else if #[cfg(feature = "linux")] {
+            let rootfs = fs::rootfs();
+            linux_object::dbginfo::init_debuginfo(&rootfs);
             zircon_object::symbol::init_symbol_table();
             zircon_object::probe::run_tests();
             let args = options.root_proc.split('?').map(Into::into).collect(); // parse "arg0?arg1?arg2"
             let envs = alloc::vec!["PATH=/usr/sbin:/usr/bin:/sbin:/bin".into()];
-            let rootfs = fs::rootfs();
-            linux_object::dbginfo::init_debuginfo(&rootfs);
             let proc = zcore_loader::linux::run(args, envs, rootfs);
             utils::wait_for_exit(Some(proc))
         } else if #[cfg(feature = "zircon")] {

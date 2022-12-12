@@ -143,9 +143,9 @@ pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
             _ => Err(ENOENT),
         }
     }?;
-    trace!("prog found!");
+    warn!("prog found!");
     let (tp_type, fn_name) = parse_tracepoint(target)?;
-    info!("tracepoint parsed: type={:?} fn={}", tp_type, fn_name);
+    warn!("tracepoint parsed: type={:?} fn={}", tp_type, fn_name);
     let addr = resolve_symbol(fn_name).ok_or(ENOENT)?;
     warn!("trace point symbol resolved, symbol:{} addr: {:x}", fn_name, addr);
 

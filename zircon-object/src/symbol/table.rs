@@ -109,7 +109,10 @@ pub fn init_symbol_table() {
 }
 
 pub fn symbol_to_addr(name: &str) -> Option<usize> {
-    SYMBOL_TABLE.lock().as_ref().unwrap().translate(name)
+    warn!("symbol_to_addr: {}", name);
+    let addr = SYMBOL_TABLE.lock().as_ref().unwrap().translate(name);
+    warn!("symbol_to_addr: {} -> {:x}", name, addr.unwrap());
+    addr
 }
 
 pub fn symbol_table_with<T>(f: impl FnOnce(&SymbolTable) -> T) -> T {
