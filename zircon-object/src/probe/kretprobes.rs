@@ -10,6 +10,9 @@ use super::arch::{
 use super::kprobes::{register_kprobe, unregister_kprobe, Handler};
 use super::{KProbeArgs, KRetProbeArgs, TrapFrame};
 
+/// instances: the function is entered but has not returned, leaving the probe hanging
+/// instance_limit: the maximum number of instances allowed, limits probing of recursive functions
+/// misses: the number of times the instance limit was reached and retprobe was not executed
 struct KRetProbe {
     entry_handler: Option<Arc<Handler>>,
     exit_handler: Arc<Handler>,
@@ -25,7 +28,12 @@ struct KRetProbeInstance {
 }
 
 lazy_static! {
+    /// address -> KRetProbe instance
     static ref KRETPROBES: Mutex<BTreeMap<usize, KRetProbe>> = Mutex::new(BTreeMap::new());
+    /// breakpoint addr -> (pc, ra) in original trapframe
+    /// the breakpoint is in a trampoline area, where every ebreak is associated with a kretprobe instance
+    /// pc is used to obtain associated KRetProbe from the above map
+    /// ra is used to restore the original trapframe since it is modified to execute post_handler
     static ref INSTANCES: Mutex<BTreeMap<usize, KRetProbeInstance>> = Mutex::new(BTreeMap::new());
 }
 
@@ -57,11 +65,13 @@ impl KRetProbeInstance {
     }
 }
 
+/// a kretprobe is registered by registering a kprobe with this as the handler
+/// executes pre_handler like kprobe, then changes ra to a breakpoint trampoline to execute exit_handler in kretprobe
+/// meanwhile saves pc and ra in INSTANCES to restore trapframe later
 fn kretprobe_kprobe_pre_handler(tf: &mut TrapFrame, _data: usize) -> isize {
     let pc = get_trapframe_pc(tf);
     let mut kretprobes = KRETPROBES.lock();
     let probe = kretprobes.get_mut(&pc).unwrap();
-
     if probe.nr_instances >= probe.instance_limit {
         error!(
             "[kretprobe] number of instances for entry {:#x} reaches limit",
@@ -79,11 +89,14 @@ fn kretprobe_kprobe_pre_handler(tf: &mut TrapFrame, _data: usize) -> isize {
     let ra = get_trapframe_ra(tf);
     let instance = KRetProbeInstance::new(pc, ra);
     let bp_addr = alloc_breakpoint();
+    // save pc and ra to restore trapframe later
     INSTANCES.lock().insert(bp_addr, instance);
     set_trapframe_ra(tf, bp_addr);
     0
 }
 
+/// this will be called when the breakpoint in the trampoline area is hit
+/// restores trapframe and executes exit_handler
 pub fn kretprobe_trap_handler(tf: &mut TrapFrame) -> bool {
     // lock KRETPROBES first to avoid dead lock
     let mut kretprobes = KRETPROBES.lock();
@@ -104,6 +117,8 @@ pub fn kretprobe_trap_handler(tf: &mut TrapFrame) -> bool {
     true
 }
 
+/// register a kretprobe by registering a kprobe with kretprobe_kprobe_pre_handler as the handler
+/// also ensures that kretprobe dosen't overwrite a kprobe
 pub fn register_kretprobe(entry_addr: usize, args: KRetProbeArgs) -> bool {
     if !register_kprobe(entry_addr, KProbeArgs::from(kretprobe_kprobe_pre_handler)) {
         error!("[kretprobe] failed to register kprobe.");

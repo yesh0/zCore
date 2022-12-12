@@ -29,7 +29,9 @@ pub enum SingleStepType {
 }
 
 lazy_static! {
+    /// address -> probe instance
     static ref KPROBES: Mutex<BTreeMap<usize, KProbe>> = Mutex::new(BTreeMap::new());
+    /// post instruction address -> original instruction address
     static ref ADDR_MAP: Mutex<BTreeMap<usize, usize>> = Mutex::new(BTreeMap::new());
 }
 
@@ -69,17 +71,16 @@ impl KProbe {
     }
 }
 
-// returns whether this event is handled
+/// entry of ebreak trap, returns whether this event is handled
+/// returning false means the ebreak dosen't belong to kprobes
 pub fn kprobe_trap_handler(tf: &mut TrapFrame) -> bool {
-    warn!("entered kprobe handler");
     let pc = get_trapframe_pc(tf);
     let mut map = KPROBES.lock();
+    // check if this is the entry of a kprobe, fails if pc is at post handler stage
     if let Some(probe) = map.get_mut(&pc) {
         // breakpoint hit for the first time
         probe.active_count += 1;
-        warn!("enter bpf prog");
         let _ = (probe.pre_handler)(tf, probe.user_data);
-        warn!("out of bpf prog");
         // emulate branch instructions
         if probe.emulate {
             emulate_execution(tf, probe.insn_buf.addr(), probe.addr);
@@ -91,13 +92,13 @@ pub fn kprobe_trap_handler(tf: &mut TrapFrame) -> bool {
         }
 
         // redirect to instruction buffer (single step type is 'execute')
-        // warn!("redirect target {:#x}", probe.insn_buf.addr());
         set_trapframe_pc(tf, probe.insn_buf.addr());
         // return true -> redirect to buffer -> ebreak in buffer -> post_handler -> in ADDR_MAP instead of KPROBES
-        info!("set pc to {:#x}", probe.insn_buf.addr());
         return true;
     }
 
+    // TODO: remove this map
+    // post_handler stage
     if let Some(orig_addr) = ADDR_MAP.lock().get(&pc) {
         let probe = map.get_mut(orig_addr).unwrap();
         if let Some(handler) = &probe.post_handler {
@@ -110,6 +111,8 @@ pub fn kprobe_trap_handler(tf: &mut TrapFrame) -> bool {
     false
 }
 
+/// register kprobe with args at given address
+/// possible errors: kprobe already exist at given addr, target instruction is not supported
 pub fn register_kprobe(addr: usize, args: KProbeArgs) -> bool {
     let mut map = KPROBES.lock();
     if map.contains_key(&addr) {
@@ -138,17 +141,19 @@ pub fn register_kprobe(addr: usize, args: KProbeArgs) -> bool {
     // bp in inst buffer, will be executed if inst not emulated
     let next_bp_addr = probe.insn_buf.addr() + probe.insn_len;
     probe.arm();
-
+    // TODO: change logic
     ADDR_MAP.lock().insert(next_bp_addr, addr);
     map.insert(addr, probe);
     info!(
-        "kprobe for address {:#x} inserted. {} kprobes registered",
+        "kprobe for address {:#x} inserted. {} kprobes has been registered",
         addr,
         map.len()
     );
     true
 }
 
+/// unregister kprobe at given address
+/// possible errors: kprobe not exist at given addr, kprobe is still active(post handler not executed)
 pub fn unregister_kprobe(addr: usize) -> bool {
     let mut map = KPROBES.lock();
     if let Some(probe) = map.get(&addr) {

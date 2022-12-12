@@ -42,6 +42,7 @@ fn primary_main(config: kernel_hal::KernelConfig) {
     logging::init();
     memory::init();
     kernel_hal::primary_init_early(config, &handler::ZcoreKernelHandler);
+    zircon_object::probe::init_osutils(&handler::ZcoreKernelHandler);
     let options = utils::boot_options();
     logging::set_max_level(&options.log_level);
     logging::set_max_level("warning");
@@ -58,6 +59,7 @@ fn primary_main(config: kernel_hal::KernelConfig) {
             let args = options.root_proc.split('?').map(Into::into).collect(); // parse "arg0?arg1?arg2"
             let envs = alloc::vec!["PATH=/usr/sbin:/usr/bin:/sbin:/bin".into()];
             let rootfs = fs::rootfs();
+            linux_object::dbginfo::init_debuginfo(&rootfs);
             let proc = zcore_loader::linux::run(args, envs, rootfs);
             utils::wait_for_exit(Some(proc))
         } else if #[cfg(feature = "zircon")] {

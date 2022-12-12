@@ -25,6 +25,9 @@ impl LinuxRootfs {
     /// 对于 x86_64，这个文件系统可用于 libos 启动。
     /// 若设置 `clear`，将清除已存在的目录。
     pub fn make(&self, clear: bool) {
+        // 重新编译后debuginfo会变化，需要覆盖
+        let zcore = self.zcore_elf();
+        fs::copy(zcore, self.path().join("zcore")).unwrap();
         // 若已存在且不需要清空，可以直接退出
         let dir = self.path();
         if dir.is_dir() && !clear {
@@ -33,7 +36,6 @@ impl LinuxRootfs {
         // 准备最小系统需要的资源
         let musl = self.0.linux_musl_cross();
         let busybox = self.busybox(&musl);
-        let symbol_table = self.symbol_table();
         // 创建目标目录
         let bin = dir.join("bin");
         let lib = dir.join("lib");
@@ -42,8 +44,6 @@ impl LinuxRootfs {
         fs::create_dir(&lib).unwrap();
         // 拷贝 busybox
         fs::copy(busybox, bin.join("busybox")).unwrap();
-        // 拷贝 symbol table
-        fs::copy(symbol_table, self.path().join("kernel.sym")).unwrap();
         // 拷贝 libc.so
         let from = musl
             .join(format!("{}-linux-musl", self.0.name()))
@@ -79,8 +79,8 @@ impl LinuxRootfs {
         PROJECT_DIR.join("rootfs").join(self.0.name())
     }
 
-    fn symbol_table(&self) -> PathBuf {
-        PROJECT_DIR.join("ignored").join("dump").join("kernel.sym")
+    fn zcore_elf(&self) -> PathBuf {
+        PROJECT_DIR.join("target").join(self.0.name()).join("release").join("zcore")
     }
 
     /// 编译 busybox。

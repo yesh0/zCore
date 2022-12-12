@@ -1,10 +1,13 @@
 pub mod kprobes;
 pub mod kretprobes;
 pub mod trace;
+pub mod osutils;
 
-use alloc::sync::Arc;
+pub use osutils::init_osutils;
+
 use kprobes::{Handler, HandlerFn};
 pub use trapframe::TrapFrame;
+use alloc::sync::Arc;
 
 #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))]
 #[path = "arch/riscv/mod.rs"]
@@ -73,6 +76,7 @@ pub fn unregister_kretprobe(addr: usize) -> Option<()> {
     }
 }
 
+/// This function should be called from the trap handler when a breakpoint is hit.
 #[no_mangle]
 pub fn kprobes_breakpoint_handler(tf: &mut TrapFrame) {
     let handled = kprobes::kprobe_trap_handler(tf);
@@ -88,4 +92,8 @@ pub fn run_tests() {
     tests::kretprobes_test::run_kretprobes_test();
     tests::trace_test::run_dynamic_trace_test();
     info!("kprobe tests passed");
+}
+
+pub fn panic_test() {
+    panic!("panic test");
 }
