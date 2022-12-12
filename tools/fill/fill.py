@@ -32,7 +32,7 @@ if __name__ == "__main__":
         file])
     with open(obj_path, 'wb') as f:
         f.write(dump)
-    
+    '''
     symbol_table_addr, symbol_table_size_addr, sdata = None, None, None
     for line in dump.splitlines():
         line = line.decode().split()
@@ -71,5 +71,5 @@ if __name__ == "__main__":
         'dd', 'bs=1', 'count=' + str(fsize),
         'if=' + tmp_path, 'of=' + file, 'seek=' + str(symbol_table_size_addr),
         'conv=notrunc'])
-
+    '''
     print("Done dumping symbol table to " + sym_path)

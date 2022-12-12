@@ -25,12 +25,14 @@ impl LinuxRootfs {
     /// 对于 x86_64，这个文件系统可用于 libos 启动。
     /// 若设置 `clear`，将清除已存在的目录。
     pub fn make(&self, clear: bool) {
-        // 重新编译后debuginfo会变化，需要覆盖
-        let zcore = self.zcore_elf();
-        fs::copy(zcore, self.path().join("zcore")).unwrap();
         // 若已存在且不需要清空，可以直接退出
         let dir = self.path();
         if dir.is_dir() && !clear {
+            // 重新编译后debuginfo会变化，需要覆盖
+            let zcore = self.zcore_elf();
+            fs::copy(zcore, self.path().join("zcore")).unwrap();
+            let symtab = self.symbol_table();
+            fs::copy(symtab, self.path().join("zcore.sym")).unwrap();
             return;
         }
         // 准备最小系统需要的资源
@@ -51,6 +53,10 @@ impl LinuxRootfs {
             .join("libc.so");
         let to = lib.join(format!("ld-musl-{arch}.so.1", arch = self.0.name()));
         fs::copy(from, &to).unwrap();
+        let zcore = self.zcore_elf();
+        fs::copy(zcore, self.path().join("zcore")).unwrap();
+        let symtab = self.symbol_table();
+        fs::copy(symtab, self.path().join("zcore.sym")).unwrap();
         Ext::new(self.strip(musl)).arg("-s").arg(to).invoke();
         // 为常用功能建立符号链接
         const SH: &[&str] = &[
@@ -81,6 +87,10 @@ impl LinuxRootfs {
 
     fn zcore_elf(&self) -> PathBuf {
         PROJECT_DIR.join("target").join(self.0.name()).join("release").join("zcore")
+    }
+
+    fn symbol_table(&self) -> PathBuf {
+        PROJECT_DIR.join("ignored").join("dump").join("kernel.sym")
     }
 
     /// 编译 busybox。

@@ -9,27 +9,34 @@ lazy_static! {
 
 pub const PAGE_SIZE: usize = kernel_hal::PAGE_SIZE;
 
+/// optional function to initialize anything needed
 pub fn init_osutils(handler: &'static dyn KernelHandler) {
-    *KHANDLER.lock() = Some(handler);
+    KHANDLER.lock().replace(handler);
 }
 
-// TODO: actually modify page table
+/// Allocate a page of memory, return virtual address
+/// The page need to be readable, writable and executable
 pub fn alloc_page() -> usize {
     let pa = KHANDLER.lock().unwrap().frame_alloc().unwrap();
     let va = phys_to_virt(pa);
-    trace!("alloc_page: va = {:#x}", va);
     va
 }
 
+/// Deallocate a page of memory from virtual address
 pub fn dealloc_page(va: usize) {
     let pa = virt_to_phys(va);
-    trace!("dealloc_page: va = {:#x}", va);
     KHANDLER.lock().unwrap().frame_dealloc(pa);
 }
 
+/// Copy memory from src to dst, uses virtual address
 pub fn byte_copy(dst_addr: usize, src_addr: usize, len: usize) {
-    trace!("byte_copy: src = {:#x}, dst = {:#x}, len = {:#x}", src_addr, dst_addr, len);
     pmem_copy(virt_to_phys(dst_addr),
                 virt_to_phys(src_addr),
                 len);
+}
+
+use crate::symbol::symbol_to_addr as _symbol_to_addr;
+/// Convert symbol to address for kprobe registering, not required
+pub fn symbol_to_addr(symbol: &str) -> Option<usize> {
+    _symbol_to_addr(symbol)
 }

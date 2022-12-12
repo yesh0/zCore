@@ -56,7 +56,7 @@ fn primary_main(config: kernel_hal::KernelConfig) {
         } else if #[cfg(feature = "linux")] {
             let rootfs = fs::rootfs();
             linux_object::dbginfo::init_debuginfo(&rootfs);
-            zircon_object::symbol::init_symbol_table();
+            linux_object::dbginfo::init_symtab();
             zircon_object::probe::run_tests();
             let args = options.root_proc.split('?').map(Into::into).collect(); // parse "arg0?arg1?arg2"
             let envs = alloc::vec!["PATH=/usr/sbin:/usr/bin:/sbin:/bin".into()];
