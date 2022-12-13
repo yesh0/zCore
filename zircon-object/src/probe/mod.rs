@@ -5,7 +5,7 @@ pub mod osutils;
 pub use osutils::init_osutils;
 
 use kprobes::{Handler, HandlerFn};
-pub use trapframe::TrapFrame;
+pub use arch::TrapFrame;
 use alloc::sync::Arc;
 
 #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))]

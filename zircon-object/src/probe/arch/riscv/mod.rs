@@ -1,7 +1,8 @@
 use core::arch::{asm};
-use core::slice::{from_raw_parts, from_raw_parts_mut};
 use riscv_decode::{CompressedInstruction::*, Instruction::*, *};
-use trapframe::TrapFrame;
+mod trapframe;
+
+pub use self::trapframe::*;
 use super::kprobes::SingleStepType::{self, *};
 
 mod breakpoint;
@@ -88,40 +89,6 @@ pub fn get_insn_type(addr: usize) -> SingleStepType {
     }
 }
 
-pub fn get_trapframe_pc(tf: &TrapFrame) -> usize {
-    tf.sepc
-}
-
-pub fn set_trapframe_pc(tf: &mut TrapFrame, pc: usize) {
-    tf.sepc = pc;
-}
-
-pub fn get_trapframe_ra(tf: &TrapFrame) -> usize {
-    tf.general.ra
-}
-
-pub fn set_trapframe_ra(tf: &mut TrapFrame, ra: usize) {
-    tf.general.ra = ra;
-}
-
-fn get_reg(tf: &TrapFrame, reg: u32) -> usize {
-    let regs = unsafe { from_raw_parts(&tf.general.zero as *const usize, 32) };
-    let index = reg as usize;
-    if index != 0 {
-        regs[index]
-    } else {
-        0
-    }
-}
-
-fn set_reg(tf: &mut TrapFrame, reg: u32, val: usize) {
-    let regs = unsafe { from_raw_parts_mut(&mut tf.general.zero as *mut usize, 32) };
-    let index = reg as usize;
-    if index != 0 {
-        regs[index] = val;
-    }
-}
-
 // converts RVC register number to common register number
 // fn rvc_reg_number(i: u32) -> u32 {
 //     i + 8
@@ -133,12 +100,12 @@ pub fn emulate_execution(tf: &mut TrapFrame, insn_addr: usize, pc: usize) {
     match insn {
         Jal(j_type) => {
             let offset = j_type.imm() as isize;
-            tf.sepc = pc + offset as usize;
+            set_trapframe_sepc(tf, pc + offset as usize);
             set_reg(tf, j_type.rd(), pc + 4);
         }
         Jalr(i_type) => {
             let offset = i_type.imm() as isize;
-            tf.sepc = get_reg(tf, i_type.rs1()) + offset as usize;
+            set_trapframe_sepc(tf, get_reg(tf, i_type.rs1()) + offset as usize);
             set_reg(tf, i_type.rd(), pc + 4);
         }
         Beq(b_type) => {
@@ -146,9 +113,9 @@ pub fn emulate_execution(tf: &mut TrapFrame, insn_addr: usize, pc: usize) {
             let rs1 = get_reg(tf, b_type.rs1());
             let rs2 = get_reg(tf, b_type.rs2());
             if rs1 == rs2 {
-                tf.sepc = pc + offset as usize;
+                set_trapframe_sepc(tf, pc + offset as usize);
             } else {
-                tf.sepc = pc + 4;
+                set_trapframe_sepc(tf, pc + 4);
             }
         }
         Bne(b_type) => {
@@ -156,21 +123,21 @@ pub fn emulate_execution(tf: &mut TrapFrame, insn_addr: usize, pc: usize) {
             let rs1 = get_reg(tf, b_type.rs1());
             let rs2 = get_reg(tf, b_type.rs2());
             if rs1 != rs2 {
-                tf.sepc = pc + offset as usize;
+                set_trapframe_sepc(tf, pc + offset as usize);
             } else {
-                tf.sepc = pc + 4;
+                set_trapframe_sepc(tf, pc + 4);
             }
         }
         Compressed(c_insn) => match c_insn {
             CJ(cj_type) => {
                 let offset = cj_type.imm() as isize;
-                tf.sepc = pc + offset as usize;
+                set_trapframe_sepc(tf, pc + offset as usize);
             }
             CJr(cr_type) => {
-                tf.sepc = get_reg(tf, cr_type.rs1());
+                set_trapframe_sepc(tf, get_reg(tf, cr_type.rs1()));
             }
             CJalr(cr_type) => {
-                tf.sepc = get_reg(tf, cr_type.rs1());
+                set_trapframe_sepc(tf, get_reg(tf, cr_type.rs1()));
                 set_reg(tf, 1, pc + 2);
             }
             _ => panic!("emulation of this instruction is not supported"),
