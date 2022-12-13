@@ -118,7 +118,6 @@ pub fn kretprobe_trap_handler(tf: &mut TrapFrame) -> bool {
 }
 
 /// register a kretprobe by registering a kprobe with kretprobe_kprobe_pre_handler as the handler
-/// also ensures that kretprobe dosen't overwrite a kprobe
 pub fn register_kretprobe(entry_addr: usize, args: KRetProbeArgs) -> bool {
     if !register_kprobe(entry_addr, KProbeArgs::from(kretprobe_kprobe_pre_handler)) {
         error!("[kretprobe] failed to register kprobe.");
@@ -151,6 +150,23 @@ pub fn unregister_kretprobe(entry_addr: usize) -> bool {
             }
             ok
         }
+    } else {
+        false
+    }
+}
+
+use super::osutils::symbol_to_addr;
+pub fn register_kretprobe_with_symbol(symbol: &str, args: KRetProbeArgs) -> bool {
+    if let Some(addr) = symbol_to_addr(symbol) {
+        register_kretprobe(addr, args)
+    } else {
+        false
+    }
+}
+
+pub fn unregister_kretprobe_with_symbol(symbol: &str) -> bool {
+    if let Some(addr) = symbol_to_addr(symbol) {
+        unregister_kretprobe(addr)
     } else {
         false
     }

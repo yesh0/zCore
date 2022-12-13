@@ -20,10 +20,10 @@ impl SymbolTable {
     }
 
     pub fn add_symbol(&mut self, name: String, addr: usize) {
-        info!("add symbol: {:x} {}", addr, name);
         self.kernel_symbols.push((name, addr));
     }
 
+    /// name to address
     pub fn translate(&self, name: &str) -> Option<usize> {
         for (symbol_name, addr) in self.kernel_symbols.iter() {
             if symbol_name == name {
@@ -33,6 +33,7 @@ impl SymbolTable {
         None
     }
 
+    /// binary search, returns symbol name and symbol address
     pub fn find_symbol(&self, addr: usize) -> Option<(&str, usize)> {
         let mut l: usize = 0;
         let mut r = self.kernel_symbols.len();
@@ -64,7 +65,7 @@ impl SymbolTable {
         }
     }
 
-    /// should be called only once
+    /// should be called only once with the symbol table string
     pub fn init(symtab: &str) {
         info!("Symbol Table loading...");
         let mut table = Self::new();

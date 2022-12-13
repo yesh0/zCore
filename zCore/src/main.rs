@@ -78,6 +78,7 @@ fn secondary_main() -> ! {
         core::hint::spin_loop();
     }
     kernel_hal::secondary_init();
+    zircon_object::probe::run_tests();
     info!("hart{} inited", kernel_hal::cpu::cpu_id());
     #[cfg(feature = "mock-disk")]
     {

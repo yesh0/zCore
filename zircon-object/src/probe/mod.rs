@@ -1,6 +1,5 @@
 pub mod kprobes;
 pub mod kretprobes;
-pub mod trace;
 pub mod osutils;
 
 pub use osutils::init_osutils;
@@ -87,13 +86,6 @@ pub fn kprobes_breakpoint_handler(tf: &mut TrapFrame) {
 
 mod tests;
 pub fn run_tests() {
-    info!("running kprobe tests");
     tests::kprobes_test::run_kprobes_tests();
     tests::kretprobes_test::run_kretprobes_test();
-    tests::trace_test::run_dynamic_trace_test();
-    info!("kprobe tests passed");
-}
-
-pub fn panic_test() {
-    panic!("panic test");
 }

@@ -81,19 +81,20 @@ pub fn kprobe_trap_handler(tf: &mut TrapFrame) -> bool {
         // breakpoint hit for the first time
         probe.active_count += 1;
         let _ = (probe.pre_handler)(tf, probe.user_data);
-        // emulate branch instructions
+        // emulate and return if instruction is emulated
         if probe.emulate {
             emulate_execution(tf, probe.insn_buf.addr(), probe.addr);
             if let Some(handler) = &probe.post_handler {
                 let _ = handler(tf, probe.user_data);
             }
             probe.active_count -= 1;
+            // finished probing, back to kernel handler
             return true;
         }
 
         // redirect to instruction buffer (single step type is 'execute')
         set_trapframe_pc(tf, probe.insn_buf.addr());
-        // return true -> redirect to buffer -> ebreak in buffer -> post_handler -> in ADDR_MAP instead of KPROBES
+        // return to buffer to execute -> ebreak in buffer -> post_handler -> in ADDR_MAP instead of KPROBES
         return true;
     }
 
@@ -112,6 +113,7 @@ pub fn kprobe_trap_handler(tf: &mut TrapFrame) -> bool {
 }
 
 /// register kprobe with args at given address
+/// multiple kprobes at the same address is not supported for now
 /// possible errors: kprobe already exist at given addr, target instruction is not supported
 pub fn register_kprobe(addr: usize, args: KProbeArgs) -> bool {
     let mut map = KPROBES.lock();

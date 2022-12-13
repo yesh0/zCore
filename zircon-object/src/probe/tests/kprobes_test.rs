@@ -1,10 +1,9 @@
 // WARNING: riscv only!
-use super::kprobes::{register_kprobe, register_kprobe_with_symbol};
+use super::kprobes::{register_kprobe};
 use core::slice::from_raw_parts;
 use core::arch::global_asm;
 use alloc::sync::Arc;
 use super::{KProbeArgs, TrapFrame};
-use crate::symbol::{symbol_table_with};
 
 #[no_mangle]
 pub extern "C" fn kprobes_test_ok(i: usize) {
@@ -19,10 +18,7 @@ extern "C" {
 
 fn test_pre_handler(tf: &mut TrapFrame, _data: usize) -> isize {
     let pc = tf.sepc;
-    symbol_table_with(|table| {
-        let (name, addr) = table.find_symbol(pc).unwrap_or(("unknown", 0));
-        warn!("[KPROBE_PRE_HANDLER] entering fn {}, addr = {:#x}, pc = {:#x}", name, addr, pc);
-    });
+    warn!("[KPROBE_PRE_HANDLER] pc = {:#x}", pc);
     0
 }
 
@@ -48,12 +44,6 @@ pub fn run_kprobes_tests() {
         }
     }
     info!("kprobes tests finished");
-    register_kprobe_with_symbol("<linux_syscall::Syscall>::sys_mkdirat",
-     KProbeArgs {
-        pre_handler: Arc::new(test_pre_handler),
-        post_handler: Some(Arc::new(test_post_handler)),
-        user_data: 0,
-    });
 }
 
 global_asm!(include_str!("test.S"));
