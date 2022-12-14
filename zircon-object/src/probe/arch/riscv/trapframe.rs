@@ -17,10 +17,6 @@ pub fn set_trapframe_ra(tf: &mut TrapFrame, ra: usize) {
     tf.general.ra = ra;
 }
 
-pub fn set_trapframe_sepc(tf: &mut TrapFrame, sepc: usize) {
-    tf.sepc = sepc;
-}
-
 pub fn get_reg(tf: &TrapFrame, reg: u32) -> usize {
     let regs = unsafe { from_raw_parts(&tf.general.zero as *const usize, 32) };
     let index = reg as usize;

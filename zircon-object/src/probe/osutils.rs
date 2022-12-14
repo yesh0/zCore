@@ -28,7 +28,7 @@ pub fn dealloc_page(va: usize) {
     KHANDLER.lock().unwrap().frame_dealloc(pa);
 }
 
-/// Copy memory from src to dst, uses virtual address
+/// Copy memory from src to dst, dst is in user space and src is in kernel space
 pub fn byte_copy(dst_addr: usize, src_addr: usize, len: usize) {
     pmem_copy(virt_to_phys(dst_addr),
                 virt_to_phys(src_addr),

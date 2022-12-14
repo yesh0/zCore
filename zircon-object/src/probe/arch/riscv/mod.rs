@@ -100,12 +100,12 @@ pub fn emulate_execution(tf: &mut TrapFrame, insn_addr: usize, pc: usize) {
     match insn {
         Jal(j_type) => {
             let offset = j_type.imm() as isize;
-            set_trapframe_sepc(tf, pc + offset as usize);
+            set_trapframe_pc(tf, pc + offset as usize);
             set_reg(tf, j_type.rd(), pc + 4);
         }
         Jalr(i_type) => {
             let offset = i_type.imm() as isize;
-            set_trapframe_sepc(tf, get_reg(tf, i_type.rs1()) + offset as usize);
+            set_trapframe_pc(tf, get_reg(tf, i_type.rs1()) + offset as usize);
             set_reg(tf, i_type.rd(), pc + 4);
         }
         Beq(b_type) => {
@@ -113,9 +113,9 @@ pub fn emulate_execution(tf: &mut TrapFrame, insn_addr: usize, pc: usize) {
             let rs1 = get_reg(tf, b_type.rs1());
             let rs2 = get_reg(tf, b_type.rs2());
             if rs1 == rs2 {
-                set_trapframe_sepc(tf, pc + offset as usize);
+                set_trapframe_pc(tf, pc + offset as usize);
             } else {
-                set_trapframe_sepc(tf, pc + 4);
+                set_trapframe_pc(tf, pc + 4);
             }
         }
         Bne(b_type) => {
@@ -123,21 +123,21 @@ pub fn emulate_execution(tf: &mut TrapFrame, insn_addr: usize, pc: usize) {
             let rs1 = get_reg(tf, b_type.rs1());
             let rs2 = get_reg(tf, b_type.rs2());
             if rs1 != rs2 {
-                set_trapframe_sepc(tf, pc + offset as usize);
+                set_trapframe_pc(tf, pc + offset as usize);
             } else {
-                set_trapframe_sepc(tf, pc + 4);
+                set_trapframe_pc(tf, pc + 4);
             }
         }
         Compressed(c_insn) => match c_insn {
             CJ(cj_type) => {
                 let offset = cj_type.imm() as isize;
-                set_trapframe_sepc(tf, pc + offset as usize);
+                set_trapframe_pc(tf, pc + offset as usize);
             }
             CJr(cr_type) => {
-                set_trapframe_sepc(tf, get_reg(tf, cr_type.rs1()));
+                set_trapframe_pc(tf, get_reg(tf, cr_type.rs1()));
             }
             CJalr(cr_type) => {
-                set_trapframe_sepc(tf, get_reg(tf, cr_type.rs1()));
+                set_trapframe_pc(tf, get_reg(tf, cr_type.rs1()));
                 set_reg(tf, 1, pc + 2);
             }
             _ => panic!("emulation of this instruction is not supported"),
