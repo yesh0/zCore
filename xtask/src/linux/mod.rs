@@ -54,9 +54,19 @@ impl LinuxRootfs {
         let to = lib.join(format!("ld-musl-{arch}.so.1", arch = self.0.name()));
         fs::copy(from, &to).unwrap();
         let zcore = self.zcore_elf();
-        fs::copy(zcore, self.path().join("zcore")).unwrap();
+        match fs::copy(zcore, self.path().join("zcore")) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("copy zcore failed: {}", e);
+            }
+        }
         let symtab = self.symbol_table();
-        fs::copy(symtab, self.path().join("zcore.sym")).unwrap();
+        match fs::copy(symtab, self.path().join("zcore.sym")) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("copy zcore.sym failed: {}, No symbol table", e);
+            }
+        }
         Ext::new(self.strip(musl)).arg("-s").arg(to).invoke();
         // 为常用功能建立符号链接
         const SH: &[&str] = &[

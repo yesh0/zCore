@@ -1,5 +1,5 @@
 // WARNING: riscv only!
-use super::kprobes::{register_kprobe};
+use super::kprobes::{register_kprobe, register_kprobe_with_symbol};
 use core::slice::from_raw_parts;
 use core::arch::global_asm;
 use alloc::sync::Arc;
