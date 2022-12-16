@@ -58,7 +58,7 @@ impl BpfProgram {
 
 // #[cfg(target_arch = "riscv64")]
 pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfResult {
-    warn!("bpf program load ex");
+    trace!("bpf program load ex");
     let _base = prog.as_ptr();
     let elf = xmas_elf::ElfFile::new(prog).map_err(|_| EINVAL)?;
     match elf.header.pt2.machine().as_machine() {
@@ -69,13 +69,13 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
     // build map fd table. storage must be fixed after this.
 
     let mut map_fd_table = Vec::with_capacity(200);
-    error!("addr {:x}, len {}", map_fd_table.as_ptr() as usize, map_info.len());
+    info!("addr {:x}, len {}", map_fd_table.as_ptr() as usize, map_info.len());
     for map_fd in map_info {
         map_fd_table.push(map_fd.1);
-        warn!("pushed fd: {}", map_fd.1);
+        trace!("pushed fd: {}", map_fd.1);
     }
 
-    error!("map fd table built len: {}", map_fd_table.len());
+    info!("map fd table built len: {}", map_fd_table.len());
 
     // build index -> map_fd variable address mapping
     let mut map_symbols = BTreeMap::new();
@@ -88,7 +88,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                         let base = map_fd_table.as_ptr() as usize;
                         let p = base + map_idx * core::mem::size_of::<u32>();
                         map_symbols.insert(sym_idx, p);
-                        error!("insert map sym, idx: {}, addr: {:x}", sym_idx, p);
+                        info!("insert map sym, idx: {}, addr: {:x}", sym_idx, p);
                     }
                 }
             }
@@ -120,12 +120,12 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                     } else {
                         continue;
                     }
-                    error!("relocate entry idx: {} offset:{:x} type:{:?} to addr:{:x}", sym_idx, offset, rel_type, relocated_addr);
+                    info!("relocate entry idx: {} offset:{:x} type:{:?} to addr:{:x}", sym_idx, offset, rel_type, relocated_addr);
 
                     match rel_type {
                         // relocation for LD_IMM64 instruction
                         R_BPF_64_64 => {
-                            warn!("rel type match load 64!");
+                            trace!("rel type match load 64!");
                             let addr = relocated_addr as u64;
                             let (v1, v2) = (addr as u32, (addr >> 32) as u32);
                             let p1 = (base + offset + 4) as *mut u32;
@@ -136,7 +136,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                             }
                         },
                         R_BPF_64_32 => {
-                            warn!("rel type match call");
+                            trace!("rel type match call");
                             let addr = relocated_addr as u64;
                             let v = addr / 8 - 1;
                             let (v1, v2) = (v as u32, (v >> 32) as u32);
@@ -168,7 +168,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         unsafe { core::mem::transmute::<&[BpfHelperFn], &[u64]>(&HELPER_FN_TABLE) };
     compile::compile(&mut jit_ctx, helper_fn_table, 512);
 
-    error!("map fd table addr {:x}", map_fd_table.as_ptr() as usize);
+    info!("map fd table addr {:x}", map_fd_table.as_ptr() as usize);
 
     let compiled_code = jit_ctx.code; // partial move
 
@@ -180,7 +180,6 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
 
     let fd = bpf_allocate_fd();
     bpf_object_create_program(fd, program);
-    warn!("OK fd: {}", fd);
     Ok(fd as usize)
 }
 

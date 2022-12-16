@@ -48,7 +48,6 @@ pub fn bpf_map_create(attr: MapAttr) -> BpfResult {
     match attr.map_type {
         BPF_MAP_TYPE_ARRAY => {
             // array index must have size of 4
-            error!("map type array {:?}", attr);
             if internal_attr.key_size != 4 {
                 return Err(EINVAL);
             }
@@ -83,7 +82,7 @@ pub fn bpf_map_get_attr(fd: u32) -> Option<InternalMapAttr> {
 
 #[allow(unreachable_patterns)]
 pub fn bpf_map_ops(fd: u32, op: BpfMapOp, key: *const u8, value: *mut u8, flags: u64) -> BpfResult {
-    error!("bpf map ops fd:{}, op:{:?} key:{:x} value:{:x}", fd, op, key as usize, value as usize);
+    trace!("bpf map ops fd:{}, op:{:?} key:{:x} value:{:x}", fd, op, key as usize, value as usize);
     let bpf_objs = BPF_OBJECTS.lock();
     let obj = bpf_objs.get(&fd).ok_or(ENOENT)?;
     let shared_map = obj.is_map().ok_or(ENOENT)?;

@@ -81,7 +81,7 @@ fn convert_result(result: BpfResult) -> i32 {
 
 pub fn sys_bpf_map_create(attr: *const u8, size: usize) -> i32 {
    // assert_eq!(size as usize, size_of::<MapAttr>());
-    error!("sys_bpf_map_create");
+    info!("sys_bpf_map_create");
     let map_attr = unsafe {
         *(attr as *const MapAttr)
     };
@@ -136,7 +136,6 @@ pub fn sys_bpf_program_attach(attr: *const u8, size: usize) -> i32 {
 
 // this is a custome function, so we just copy from rCore
 pub fn sys_bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> i32 {
-    //error!("loaded prog:\n{:?}", prog);  
     let ret = convert_result(bpf_program_load_ex(prog, &map_info));
     trace!("load ex ret: {}", ret);
     ret
