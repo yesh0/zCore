@@ -1,4 +1,3 @@
-
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -42,7 +41,7 @@ int main() {
 
     struct bpf_map_fd_entry map_array[] = {
     }; // empty
-    int bpf_fd = bpf_prog_load_ex(p, prog_size, map_array, 1);
+    int bpf_fd = bpf_prog_load_ex(p, prog_size, map_array, 0);
     printf("load ex: %x\n", bpf_fd);
 
     //const char *target = "kprobe:_RNvMNtNtCs6EJUG5qC0e6_5rcore7syscall4procNtB4_7Syscall8sys_fork";

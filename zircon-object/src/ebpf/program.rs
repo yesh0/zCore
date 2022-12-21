@@ -95,6 +95,8 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         }
     }
     if map_symbols.len() != map_info.len() {
+        error!("map symbol len not match! expected: {:?} found:{:?}", map_info.len(), map_symbols.len());
+
         // unable to resolve all map info
         return Err(ENOENT);
     }
