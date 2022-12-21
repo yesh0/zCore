@@ -30,9 +30,19 @@ impl LinuxRootfs {
         if dir.is_dir() && !clear {
             // 重新编译后debuginfo会变化，需要覆盖
             let zcore = self.zcore_elf();
-            fs::copy(zcore, self.path().join("zcore")).unwrap();
+            match fs::copy(zcore, self.path().join("zcore")) {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("copy zcore failed: {}", e);
+                }
+            }
             let symtab = self.symbol_table();
-            fs::copy(symtab, self.path().join("zcore.sym")).unwrap();
+            match fs::copy(symtab, self.path().join("zcore.sym")) {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("copy zcore.sym failed: {}, No symbol table", e);
+                }
+            }
             return;
         }
         // 准备最小系统需要的资源
