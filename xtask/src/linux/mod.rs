@@ -119,10 +119,14 @@ impl LinuxRootfs {
                 Git::clone("https://git.busybox.net/busybox.git")
                     .dir(tmp)
                     .single_branch()
-                    .depth(1)
                     .done()
             });
         }
+        Ext::new("git")
+            .arg("checkout")
+            .arg("90456a6aa")
+            .current_dir(&source)
+            .invoke();
         // 拷贝
         dir::rm(&target).unwrap();
         dircpy::copy_dir(source, &target).unwrap();
