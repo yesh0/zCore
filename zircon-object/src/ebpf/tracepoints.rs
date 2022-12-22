@@ -56,7 +56,7 @@ fn run_attached_programs(tracepoint: &Tracepoint, ctx: *const u8) {
 }
 
 #[repr(C)]
-struct KProbeBPFContext {
+pub struct KProbeBPFContext {
     ptype: usize,
     paddr: usize,
     tf: TrapFrame,
@@ -133,7 +133,7 @@ pub fn bpf_program_attach(target: &str, prog_fd: u32) -> BpfResult {
 
     let program = {
         let objs = BPF_OBJECTS.lock();
-        
+
         match objs.get(&prog_fd) {
             Some(bpf_obj) => {
                 let shared_program = bpf_obj.is_program().unwrap();

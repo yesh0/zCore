@@ -641,6 +641,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a0836c9bd73a9d3ca55b0effc5b1eedf96dd13ef994389bcac6d4d33c46188"
 
 [[package]]
+name = "ebpf-analyzer"
+version = "0.1.0"
+source = "git+https://github.com/yesh0/ebpf-analyzer?rev=1c6b9648db8ee053f42cd2dfb13bedbf45c7ae34#1c6b9648db8ee053f42cd2dfb13bedbf45c7ae34"
+dependencies = [
+ "bitflags",
+ "ebpf-atomic",
+ "ebpf-consts",
+ "ebpf-macros",
+ "num-traits",
+]
+
+[[package]]
+name = "ebpf-atomic"
+version = "0.1.0"
+source = "git+https://github.com/yesh0/ebpf-analyzer?rev=1c6b9648db8ee053f42cd2dfb13bedbf45c7ae34#1c6b9648db8ee053f42cd2dfb13bedbf45c7ae34"
+
+[[package]]
+name = "ebpf-consts"
+version = "0.1.0"
+source = "git+https://github.com/yesh0/ebpf-analyzer?rev=1c6b9648db8ee053f42cd2dfb13bedbf45c7ae34#1c6b9648db8ee053f42cd2dfb13bedbf45c7ae34"
+
+[[package]]
+name = "ebpf-macros"
+version = "0.1.0"
+source = "git+https://github.com/yesh0/ebpf-analyzer?rev=1c6b9648db8ee053f42cd2dfb13bedbf45c7ae34#1c6b9648db8ee053f42cd2dfb13bedbf45c7ae34"
+dependencies = [
+ "ebpf-consts",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "ebpf2rv"
 version = "0.1.0"
 source = "git+https://github.com/livingshade/ebpf2rv?rev=ecfc526#ecfc526347994298582b464abe17d1f1b472013b"
@@ -2738,6 +2771,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "downcast-rs",
  "dyn-fmt",
+ "ebpf-analyzer",
  "ebpf2rv",
  "fallible-iterator",
  "futures",

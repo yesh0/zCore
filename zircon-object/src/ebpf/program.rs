@@ -1,5 +1,16 @@
+use core::mem::size_of;
+
 use alloc::string::String;
 use alloc::vec::Vec;
+use ebpf_analyzer::{
+    analyzer::{Analyzer, AnalyzerConfig},
+    interpreter::vm::Vm,
+    spec::proto::helpers::HELPERS,
+    track::{
+        pointees::{dyn_region::DynamicRegion, pointed},
+        pointer::Pointer,
+    },
+};
 use xmas_elf;
 use xmas_elf::header::Machine;
 use xmas_elf::sections::*;
@@ -8,14 +19,11 @@ use xmas_elf::symbol_table::Entry;
 #[cfg(target_arch = "riscv64")]
 use ebpf2rv::compile;
 
-use crate::error;
+use crate::{ebpf::retcode::BpfErrorCode, error};
 
 use super::{
-    *,
-    consts::*,
-    helpers::*,
-    retcode::BpfErrorCode::*,
-    retcode::BpfResult,
+    consts::*, helpers::*, retcode::BpfErrorCode::*, retcode::BpfResult,
+    tracepoints::KProbeBPFContext, *,
 };
 
 #[repr(C)]
@@ -136,7 +144,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                                 *p1 = v1;
                                 *p2 = v2;
                             }
-                        },
+                        }
                         R_BPF_64_32 => {
                             trace!("rel type match call");
                             let addr = relocated_addr as u64;
@@ -148,7 +156,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
                                 *p1 = v1;
                                 *p2 = v2;
                             }
-                        },
+                        }
                         _ => (),
                     }
                 }
@@ -156,7 +164,6 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
         }
     }
 
-    // compile eBPF code
     let sec_hdr = elf.find_section_by_name(".text").ok_or(ENOENT)?;
     let code = sec_hdr.raw_data(&elf);
     let bpf_insns = unsafe {
@@ -165,6 +172,20 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
             code.len() / core::mem::size_of::<u64>(),
         )
     };
+
+    // validate eBPF code
+    let result = Analyzer::analyze(bpf_insns, &ANALYZER_CONFIG);
+    if map_symbols.is_empty() {
+        if let Err(ref e) = result {
+            error!("eBPF failed verification: {:?}", e);
+            return Err(BpfErrorCode::EINVAL);
+        }
+    } else {
+        error!("Skipping verification for maps: {}", result.err());
+    }
+    warn!("eBPF verified");
+
+    // compile eBPF code
     let mut jit_ctx = compile::JitContext::new(bpf_insns);
     let helper_fn_table =
         unsafe { core::mem::transmute::<&[BpfHelperFn], &[u64]>(&HELPER_FN_TABLE) };
@@ -184,6 +205,17 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
     bpf_object_create_program(fd, program);
     Ok(fd as usize)
 }
+
+const ANALYZER_CONFIG: AnalyzerConfig = AnalyzerConfig {
+    helpers: HELPERS,
+    setup: &|vm| {
+        let context_region = pointed(DynamicRegion::new(size_of::<KProbeBPFContext>()));
+        vm.add_external_resource(context_region.clone());
+        *vm.reg(1) = Pointer::nrwa(context_region).into();
+    },
+    processed_instruction_limit: 1_000_000,
+    map_fd_collector: &|_| None,
+};
 
 #[cfg(not(target_arch = "riscv64"))]
 pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> SysResult {
