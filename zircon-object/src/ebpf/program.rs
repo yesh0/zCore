@@ -181,7 +181,7 @@ pub fn bpf_program_load_ex(prog: &mut [u8], map_info: &[(String, u32)]) -> BpfRe
             return Err(BpfErrorCode::EINVAL);
         }
     } else {
-        error!("Skipping verification for maps: {}", result.err());
+        error!("Skipping verification for maps: {:?}", result.err());
     }
     warn!("eBPF verified");
 

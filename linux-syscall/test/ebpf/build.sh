@@ -18,9 +18,11 @@ popd
 
 # very dirty work...
 
-cp -r "./linux-syscall/test/ebpf/kern/map.o" "./rootfs/riscv64/bin/" 
-cp -r "./linux-syscall/test/ebpf/kern/context.o" "./rootfs/riscv64/bin/" 
-cp -r "./linux-syscall/test/ebpf/kern/time1.o" "./rootfs/riscv64/bin/" 
-cp -r "./linux-syscall/test/ebpf/kern/time2.o" "./rootfs/riscv64/bin/" 
+cp -r "./linux-syscall/test/ebpf/kern/map.o" "./rootfs/riscv64/bin/"
+cp -r "./linux-syscall/test/ebpf/kern/context.o" "./rootfs/riscv64/bin/"
+cp -r "./linux-syscall/test/ebpf/kern/time1.o" "./rootfs/riscv64/bin/"
+# cp -r "./linux-syscall/test/ebpf/kern/time2.o" "./rootfs/riscv64/bin/"
+cp -r "./linux-syscall/test/ebpf/kern/invalid.o" "./rootfs/riscv64/bin/"
+cp -r "./linux-syscall/test/ebpf/kern/invalid_print.o" "./rootfs/riscv64/bin/"
 
 exit 0
